@@ -16,6 +16,5 @@ public interface IMinecraftPlatform extends IConfigurationService {
 
     Logger getLogger();
 
-    @SuppressWarnings("unused")
     MinecraftUser getUser(UUID minecraftId);
 }

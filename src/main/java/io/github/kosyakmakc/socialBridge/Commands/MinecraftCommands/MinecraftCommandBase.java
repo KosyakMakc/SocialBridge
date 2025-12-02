@@ -19,7 +19,6 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
     private final List<CommandArgument> argumentDefinition;
     private ISocialBridge bridge;
 
-    @SuppressWarnings("unused")
     public MinecraftCommandBase(String literal) {
         this(literal, Permissions.NO_PERMISSION);
     }

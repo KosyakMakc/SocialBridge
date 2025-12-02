@@ -47,7 +47,6 @@ public class DatabaseContext {
         transactionManager.callInTransaction(action);
     }
 
-    @SuppressWarnings("unused")
     public <T extends IDatabaseTable, Key> Dao<T, Key> registerTable(Class<? extends IDatabaseTable> tableClass) {
         try {
             var dao = DaoManager.createDao(connectionSource, tableClass);
@@ -59,7 +58,6 @@ public class DatabaseContext {
         }
     }
 
-    @SuppressWarnings("unused")
     public <T extends IDatabaseTable, Key> Dao<T, Key> getDaoTable(Class<T> tableClass) {
         var table = extensionTables.getOrDefault(tableClass, null);
         if (table != null) {

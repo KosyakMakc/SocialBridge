@@ -30,7 +30,6 @@ public class Version {
         return minor;
     }
 
-    @SuppressWarnings("unused")
     public int getPatch() {
         return patch;
     }

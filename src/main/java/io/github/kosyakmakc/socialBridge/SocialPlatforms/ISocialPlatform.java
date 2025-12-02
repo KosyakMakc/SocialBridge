@@ -10,7 +10,6 @@ public interface ISocialPlatform {
     String getPlatformName();
     Version getCompabilityVersion();
 
-    @SuppressWarnings("unused")
     void sendMessage(SocialUser telegramUser, String message, HashMap<String, String> placeholders);
 
     void Start();

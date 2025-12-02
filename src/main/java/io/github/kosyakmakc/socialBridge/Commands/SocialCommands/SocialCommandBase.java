@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-@SuppressWarnings("unused")
 public abstract class SocialCommandBase implements ISocialCommand {
     private final String commandName;
     @SuppressWarnings("rawtypes")

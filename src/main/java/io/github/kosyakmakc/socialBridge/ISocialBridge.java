@@ -19,20 +19,14 @@ public interface ISocialBridge {
     ConfigurationService getConfigurationService();
     void queryDatabase(IDatabaseConsumer action) throws SQLException;
 
-    @SuppressWarnings("unused")
     boolean registerSocialPlatform(ISocialPlatform socialPlatform);
-    @SuppressWarnings("unused")
     Collection<ISocialPlatform> getSocialPlatforms();
-    @SuppressWarnings("unused")
     <T extends ISocialPlatform> T getSocialPlatform(Class<T> tClass);
 
-    @SuppressWarnings("unused")
     IMinecraftPlatform getMinecraftPlatform();
 
-    @SuppressWarnings("unused")
     boolean registerModule(IBridgeModule module);
     Collection<IBridgeModule> getModules();
-    @SuppressWarnings("unused")
     <T extends IBridgeModule> T getModule(Class<T> tClass);
 
     void Start();

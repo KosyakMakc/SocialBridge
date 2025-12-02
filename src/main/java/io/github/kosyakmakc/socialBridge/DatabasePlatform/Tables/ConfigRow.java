@@ -11,7 +11,6 @@ public class ConfigRow implements IDatabaseTable {
     @DatabaseField(columnName = "value")
     private String value;
 
-    @SuppressWarnings("unused")
     public ConfigRow() {
 
     }
@@ -21,7 +20,6 @@ public class ConfigRow implements IDatabaseTable {
         this.value = value;
     }
 
-    @SuppressWarnings("unused")
     public String getParameter() {
         return parameter;
     }

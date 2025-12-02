@@ -14,7 +14,6 @@ public class Localization implements IDatabaseTable {
 
     public static final String LANGUAGE_KEY_INDEX_NAME = "language_key_idx";
 
-    @SuppressWarnings("unused")
     @DatabaseField(columnName = ID_FIELD_NAME, generatedId = true)
     private int id;
 
@@ -27,7 +26,6 @@ public class Localization implements IDatabaseTable {
     @DatabaseField(columnName = LOCALIZATION_FIELD_NAME)
     private String localization;
 
-    @SuppressWarnings("unused")
     public Localization() {
 
     }
@@ -38,17 +36,14 @@ public class Localization implements IDatabaseTable {
         this.localization = localization;
     }
 
-    @SuppressWarnings("unused")
     public int getId() {
         return id;
     }
 
-    @SuppressWarnings("unused")
     public String getLanguage() {
         return language;
     }
 
-    @SuppressWarnings("unused")
     public String getKey() {
         return key;
     }
