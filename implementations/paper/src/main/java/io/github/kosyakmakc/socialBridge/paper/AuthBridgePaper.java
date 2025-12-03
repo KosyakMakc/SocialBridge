@@ -208,16 +208,24 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
         return CompletableFuture.supplyAsync(() -> {
             var onlinePlayer = getServer().getPlayer(minecraftId);
             if (onlinePlayer != null) {
-                return new BukkitMinecraftUser(onlinePlayer);
+                return new BukkitMinecraftUser(onlinePlayer, this);
             }
             else {
-                var offlinePlayer = getServer().getOfflinePlayer(minecraftId);
-                if (offlinePlayer != null) {
-                    return new OfflineBukkitMinecraftUser(offlinePlayer);
-                }
-                else {
-                    return null;
-                }
+                return null;
+            }
+        })
+        .thenCompose(bukkitUser -> {
+            if (bukkitUser == null) {
+                var fakeProfile = getServer()
+                       .getOfflinePlayer(minecraftId)
+                       .getPlayerProfile();
+
+                return fakeProfile
+                       .update()
+                       .thenApply(profile -> fakeProfile == profile ? null : new OfflineBukkitMinecraftUser(profile, this));
+            }
+            else {
+                return CompletableFuture.completedStage(bukkitUser);
             }
         });
     }

@@ -1,5 +1,6 @@
 package io.github.kosyakmakc.socialBridge.paper;
 
+import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -10,12 +11,17 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class BukkitMinecraftUser extends MinecraftUser {
+    private final IMinecraftPlatform platform;
+    private final Logger logger;
     private final Player player;
 
-    public BukkitMinecraftUser(Player player) {
+    public BukkitMinecraftUser(Player player, IMinecraftPlatform platform) {
         super();
+        this.platform = platform;
+        this.logger = Logger.getLogger(platform.getLogger().getName() + '.' + BukkitMinecraftUser.class.getSimpleName());
         this.player = player;
     }
 
@@ -47,7 +53,9 @@ public class BukkitMinecraftUser extends MinecraftUser {
         for (var placeholderKey : placeholders.keySet()) {
             builder.editTags(x -> x.resolver(Placeholder.component(placeholderKey, Component.text(placeholders.get(placeholderKey)))));
         }
+
         var builtMessage = builder.build().deserialize(message);
         player.sendMessage(builtMessage);
+        logger.info("message to '" + this.getName() + "' - " + builtMessage.toString());
     }
 }
