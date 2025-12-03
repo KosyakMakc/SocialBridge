@@ -115,6 +115,7 @@ public class SocialBridge implements ISocialBridge {
                 })
                 .thenCompose(Void -> connectModulesToSocialPlatorm(socialPlatform))
                 .thenApply(Void -> {
+                    events.socialPlatformConnect.invoke(socialPlatform);
                     logger.info("social platform '" + socialPlatform.getPlatformName() + "' connected");
                     return true;
                 });
@@ -149,6 +150,7 @@ public class SocialBridge implements ISocialBridge {
             return socialPlatform
                 .disable()
                 .thenRun(() -> {
+                    events.socialPlatformDisconnect.invoke(socialPlatform);
                     logger.info("social platform '" + socialPlatform.getPlatformName() + "' disconnected");
                 });
         }
@@ -181,6 +183,7 @@ public class SocialBridge implements ISocialBridge {
                 .thenCompose(Void -> connectModuleToSocialPlatforms(module))
                 .thenApply(Void -> {
                     bridgeModules.put(module.getClass(), module);
+                    events.moduleConnect.invoke(module);
                     logger.info("module '" + module.getName() + "' connected");
                     return true;
                 });
@@ -252,7 +255,10 @@ public class SocialBridge implements ISocialBridge {
                 .thenCompose(Void -> disconnectMinecraftCommands(module))
                 .thenCompose(Void -> disconnectSocialCommands(module))
                 .thenApply(Void -> module.disable())
-                .thenRun(() -> logger.info("module '" + module.getName() + "' disconnected"));
+                .thenRun(() -> {
+                    events.moduleDisconnect.invoke(module);
+                    logger.info("module '" + module.getName() + "' disconnected");
+                });
         }
         else {
             logger.severe("module '" + module.getName() + "' is not registered before");
