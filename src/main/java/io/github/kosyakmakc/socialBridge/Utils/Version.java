@@ -47,4 +47,9 @@ public class Version {
                     && getMinor() >= moduleVersion.getMinor();
         }
     }
+
+    @Override
+    public String toString() {
+        return Integer.toString(major) + '.' + Integer.toString(minor) + '.' + Integer.toString(patch);
+    }
 }

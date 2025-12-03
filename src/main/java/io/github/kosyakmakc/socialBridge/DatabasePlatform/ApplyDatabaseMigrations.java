@@ -4,7 +4,6 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.Migrations.IMigration;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Migrations.v1_InitialSetup;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.Consumer;
@@ -20,9 +19,10 @@ public class ApplyDatabaseMigrations implements Consumer<ISocialBridge> {
     @Override
     public void accept(ISocialBridge bridge) {
         var logger = bridge.getLogger();
+        logger.warning("DUBG");
         var configurationService = bridge.getConfigurationService();
 
-        var databaseVersion = configurationService.getDatabaseVersion();
+        var databaseVersion = configurationService.getDatabaseVersion().join();
         var latestDatabaseVersion = Arrays.stream(migrations).max(Comparator.comparingInt(IMigration::getVersion)).get().getVersion();
 
         if (databaseVersion < latestDatabaseVersion) {
@@ -30,12 +30,7 @@ public class ApplyDatabaseMigrations implements Consumer<ISocialBridge> {
             for (var migration : migrations) {
                 if (migration.getVersion() > databaseVersion) {
                     logger.info("applying migration \"" + migration.getName() + "\" (version: " + migration.getVersion() + ").");
-
-                    try {
-                        bridge.queryDatabase(migration);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
+                    bridge.queryDatabase(migration).join();
                 }
             }
             logger.info("current database updated.");

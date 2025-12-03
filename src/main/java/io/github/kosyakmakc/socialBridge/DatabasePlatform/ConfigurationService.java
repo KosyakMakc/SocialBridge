@@ -5,31 +5,28 @@ import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
 
 public record ConfigurationService(ISocialBridge bridge) implements IConfigurationService {
     public static final String DATABASE_VERSION = "DATABASE_VERSION";
 
-    public String get(String parameter, String defaultValue) {
-        try {
-            AtomicReference<String> result = new AtomicReference<>(defaultValue);
-            bridge.queryDatabase(databaseContext -> {
+    public CompletableFuture<String> get(String parameter, String defaultValue) {
+        return bridge.queryDatabase(databaseContext -> {
+            try {
                 var record = databaseContext.configurations.queryForId(parameter);
                 if (record != null) {
-                    result.set(record.getValue());
+                    return record.getValue();
                 }
-
-                return null;
-            });
-            return result.get();
-        } catch (SQLException e) {
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             return defaultValue;
-        }
+        });
     }
 
-    public boolean set(String parameter, String value) {
-        try {
-            bridge.queryDatabase(databaseContext -> {
+    public CompletableFuture<Boolean> set(String parameter, String value) {
+        return bridge.queryDatabase(databaseContext -> {
+            try {
                 var record = databaseContext.configurations.queryForId(parameter);
                 if (record != null) {
                     record.setValue(value);
@@ -39,21 +36,23 @@ public record ConfigurationService(ISocialBridge bridge) implements IConfigurati
                     databaseContext.configurations.create(newRecord);
                 }
 
-                return null;
-            });
-            return true;
-        } catch (SQLException e) {
+                return true;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             return false;
-        }
+        });
     }
 
-    public int getDatabaseVersion() {
-        var rawVersion = get(DATABASE_VERSION, "");
-        try {
-            return Integer.parseInt(rawVersion);
-        }
-        catch (NumberFormatException err) {
-            return -1;
-        }
+    public CompletableFuture<Integer> getDatabaseVersion() {
+        return get(DATABASE_VERSION, "")
+               .thenApply(rawVersion -> {
+                   try {
+                       return Integer.parseInt(rawVersion);
+                   }
+                   catch (NumberFormatException err) {
+                       return -1;
+                   }
+               });
     }
 }

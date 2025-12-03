@@ -8,15 +8,17 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatExcept
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
+import io.github.kosyakmakc.socialBridge.DefaultModule;
+import io.github.kosyakmakc.socialBridge.IBridgeModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
+import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -25,84 +27,96 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
-public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatform {
+public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatform, IModuleLoader {
     private static final CommandArgument<String> systemWordArgument = CommandArgument.ofWord("/{pluginSuffix} {commandLiteral} [arguments, ...]");
 
-    private ISocialBridge authBridge;
     private final Version socialBridgVersion;
+    private final ISocialBridge socialBridge;
 
     public AuthBridgePaper() {
         try {
             socialBridgVersion = new Version(this.getPluginMeta().getVersion());
             SocialBridge.Init(this);
-        } catch (SQLException | IOException e) {
+            socialBridge = SocialBridge.INSTANCE;
+            
+            socialBridge.connectModule(new DefaultModule(this));
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public void onEnable() {
-        SocialBridge.INSTANCE.Start();
         new PaperEventListener(this);
-
-        SetupCommands();
     }
 
-    private void SetupCommands() {
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+    @Override
+    public void onDisable() {
+        CompletableFuture
+            .allOf(socialBridge.getSocialPlatforms().stream().map(x -> socialBridge.disconnectSocialPlatform(x)).toArray(CompletableFuture[]::new))
+            .thenCompose(Void -> CompletableFuture.allOf(socialBridge.getModules().stream().map(x -> socialBridge.disconnectModule(x)).toArray(CompletableFuture[]::new)))
+            .join();
+    }
 
-            for (var module : authBridge.getModules()) {
-                var mcCommands = module.getMinecraftCommands();
-                if (mcCommands.isEmpty()) {
-                    continue;
-                }
-
-                var rootLiteral = Commands.literal(module.getName());
-
-                for(var bridgeCommand : mcCommands) {
-                    var handler = HandleCommand(bridgeCommand);
-
-                    var cmd = Commands
-                                .literal(bridgeCommand.getLiteral())
-                                .executes(handler);
+    @Override
+    public CompletableFuture<Void> connectModule(IBridgeModule module) {
+        return CompletableFuture.runAsync(() -> {
+            if (module.getLoader() instanceof JavaPlugin externalPlugin) {
+                externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                    var mcCommands = module.getMinecraftCommands();
+                    if (mcCommands.isEmpty()) {
+                        return;
+                    }
                     
-                    var permission = bridgeCommand.getPermission();
-                    if (!permission.isEmpty()) {
-                        cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
-                    }
-
-                    // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
-                    RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
-                    for (var argument : bridgeCommand.getArgumentDefinitions()) {
-                        var argumentNode = BuildArgumentNode(argument).executes(handler);
-
-                        if (prev == null) {
-                            cmd.then(argumentNode);
+                    var rootLiteral = Commands.literal(module.getName());
+                    
+                    for(var bridgeCommand : mcCommands) {
+                        var handler = HandleCommand(bridgeCommand);
+                        
+                        var cmd = Commands
+                        .literal(bridgeCommand.getLiteral())
+                        .executes(handler);
+                        
+                        var permission = bridgeCommand.getPermission();
+                        if (!permission.isEmpty()) {
+                            cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
                         }
-                        else {
-                            prev.then(argumentNode);
+                        
+                        // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
+                        RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
+                        for (var argument : bridgeCommand.getArgumentDefinitions()) {
+                            var argumentNode = BuildArgumentNode(argument).executes(handler);
+                            
+                            if (prev == null) {
+                                cmd.then(argumentNode);
+                            }
+                            else {
+                                prev.then(argumentNode);
+                            }
+                            
+                            prev = argumentNode;
                         }
-
-                        prev = argumentNode;
+                        
+                        rootLiteral.then(cmd);
                     }
-
-                    rootLiteral.then(cmd);
-                }
-                commands.registrar().register(rootLiteral.build());
+                    commands.registrar().register(rootLiteral.build());
+                });
+            }
+            else {
+                getLogger().warning("Detected not supported module loader for '" + module.getName() + "' module.");
             }
         });
     }
-
+    
     private Command<CommandSourceStack> HandleCommand(IMinecraftCommand bridgeCommand) {
         return ctx -> {
             var sender = ctx.getSource().getSender();
@@ -121,10 +135,23 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
                 bridgeCommand.handle(mcPlatformUser, reader);
             } catch (ArgumentFormatException e) {
                 if (mcPlatformUser != null) {
-                    mcPlatformUser.sendMessage(authBridge.getLocalizationService().getMessage(mcPlatformUser.getLocale(), e.getMessageKey()), new HashMap<>());
+                    mcPlatformUser.sendMessage(
+                        socialBridge.getLocalizationService().getMessage(
+                            socialBridge.getModule(DefaultModule.class),
+                            mcPlatformUser.getLocale(),
+                            e.getMessageKey()
+                        ),
+                        new HashMap<>()
+                    );
                 }
                 else {
-                    getLogger().warning(authBridge.getLocalizationService().getMessage(LocalizationService.defaultLocale, e.getMessageKey()));
+                    getLogger().warning(
+                        socialBridge.getLocalizationService().getMessage(
+                            socialBridge.getModule(DefaultModule.class),
+                            LocalizationService.defaultLocale,
+                            e.getMessageKey()
+                        )
+                    );
                 }
             }
             return SINGLE_SUCCESS;
@@ -165,16 +192,6 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
     }
 
     @Override
-    public void onDisable() {
-        // Plugin shutdown logic
-    }
-
-    @Override
-    public void setAuthBridge(ISocialBridge authBridge) {
-        this.authBridge = authBridge;
-    }
-
-    @Override
     public @NotNull Path getDataDirectory() throws IOException {
         var dataPath = super.getDataPath();
         Files.createDirectories(dataPath);
@@ -187,32 +204,51 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
     }
 
     @Override
-    public MinecraftUser getUser(UUID minecraftId) {
-        return new BukkitMinecraftUser(Bukkit.getPlayer(minecraftId));
-    }
-
-    @Override
-    public String get(String parameter, String defaultValue) {
-        if (Objects.equals(parameter, "connectionString")) {
-            try {
-                return "jdbc:sqlite:" + Path.of(getDataDirectory().toAbsolutePath().toString(), "social-bridge.sqlite");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+    public CompletableFuture<MinecraftUser> tryGetUser(UUID minecraftId) {
+        return CompletableFuture.supplyAsync(() -> {
+            var onlinePlayer = getServer().getPlayer(minecraftId);
+            if (onlinePlayer != null) {
+                return new BukkitMinecraftUser(onlinePlayer);
             }
-        }
-        return this.getConfig().getString(parameter, defaultValue);
+            else {
+                var offlinePlayer = getServer().getOfflinePlayer(minecraftId);
+                if (offlinePlayer != null) {
+                    return new OfflineBukkitMinecraftUser(offlinePlayer);
+                }
+                else {
+                    return null;
+                }
+            }
+        });
     }
 
     @Override
-    public boolean set(String parameter, String value) {
-        try {
-            this.getConfig().set(parameter, value);
-            return true;
-        }
-        catch (Exception err) {
-            this.getLogger().log(Level.SEVERE, "Failed to set parameter(" + parameter + "=" + value + ")", err);
-            return false;
-        }
+    public CompletableFuture<String> get(String parameter, String defaultValue) {
+        return CompletableFuture.supplyAsync(() -> {
+
+            if (Objects.equals(parameter, "connectionString")) {
+                try {
+                    return "jdbc:sqlite:" + Path.of(getDataDirectory().toAbsolutePath().toString(), "social-bridge.sqlite");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return this.getConfig().getString(parameter, defaultValue);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> set(String parameter, String value) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                this.getConfig().set(parameter, value);
+                return true;
+            }
+            catch (Exception err) {
+                this.getLogger().log(Level.SEVERE, "Failed to set parameter(" + parameter + "=" + value + ")", err);
+                return false;
+            }
+        });
     }
 
     @Override

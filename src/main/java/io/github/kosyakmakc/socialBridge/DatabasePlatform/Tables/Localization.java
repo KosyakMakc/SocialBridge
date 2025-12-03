@@ -8,6 +8,7 @@ public class Localization implements IDatabaseTable {
     public static final String TABLE_NAME = "localization";
 
     public static final String ID_FIELD_NAME = "id";
+    public static final String MODULE_FIELD_NAME = "module";
     public static final String LANGUAGE_FIELD_NAME = "language";
     public static final String KEY_FIELD_NAME = "key";
     public static final String LOCALIZATION_FIELD_NAME = "localization";
@@ -16,6 +17,9 @@ public class Localization implements IDatabaseTable {
 
     @DatabaseField(columnName = ID_FIELD_NAME, generatedId = true)
     private int id;
+
+    @DatabaseField(columnName = MODULE_FIELD_NAME, uniqueIndexName = LANGUAGE_KEY_INDEX_NAME)
+    private String module;
 
     @DatabaseField(columnName = LANGUAGE_FIELD_NAME, uniqueIndexName = LANGUAGE_KEY_INDEX_NAME)
     private String language;
@@ -30,7 +34,8 @@ public class Localization implements IDatabaseTable {
 
     }
 
-    public Localization(String language, String key, String localization) {
+    public Localization(String module, String language, String key, String localization) {
+        this.module = module;
         this.language = language;
         this.key = key;
         this.localization = localization;
@@ -38,6 +43,10 @@ public class Localization implements IDatabaseTable {
 
     public int getId() {
         return id;
+    }
+
+    public String getModule() {
+        return module;
     }
 
     public String getLanguage() {

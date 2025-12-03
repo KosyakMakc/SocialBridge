@@ -13,12 +13,10 @@ public abstract class SocialUser {
         return platform;
     }
 
+    public abstract Identifier getId();
     public abstract String getName();
+    public abstract String getLocale();
 
     public abstract void sendMessage(String message, HashMap<String, String> placeholders);
 
-    public abstract String getLocale();
-
-    public abstract SocialUserIdType getIdType();
-    public abstract Object getId();
 }

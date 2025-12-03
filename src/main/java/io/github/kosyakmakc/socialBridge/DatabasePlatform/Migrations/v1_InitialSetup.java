@@ -16,22 +16,27 @@ public class v1_InitialSetup implements IMigration {
     public int getVersion() { return 1; }
 
     @Override
-    public Void accept(DatabaseContext databaseContext) throws SQLException {
-        var connectionSource = databaseContext.getConnectionSource();
+    public Void accept(DatabaseContext databaseContext) {
+        try {
+            var connectionSource = databaseContext.getConnectionSource();
+            
+            TableUtils.createTableIfNotExists(connectionSource, ConfigRow.class);
+            TableUtils.createTableIfNotExists(connectionSource, Localization.class);
 
-        TableUtils.createTableIfNotExists(connectionSource, ConfigRow.class);
-        TableUtils.createTableIfNotExists(connectionSource, Localization.class);
-
-        var parameter = ConfigurationService.DATABASE_VERSION;
-        var value = Integer.toString(getVersion());
-
-        var record = databaseContext.configurations.queryForId(parameter);
-        if (record != null) {
-            record.setValue(value);
-            databaseContext.configurations.update(record);
-        } else {
-            var newRecord = new ConfigRow(parameter, value);
-            databaseContext.configurations.create(newRecord);
+            var parameter = ConfigurationService.DATABASE_VERSION;
+            var value = Integer.toString(getVersion());
+            
+            var record = databaseContext.configurations.queryForId(parameter);
+            if (record != null) {
+                record.setValue(value);
+                databaseContext.configurations.update(record);
+            } else {
+                var newRecord = new ConfigRow(parameter, value);
+                databaseContext.configurations.create(newRecord);
+            }
+        }
+        catch (SQLException error) {
+            throw new RuntimeException(error);
         }
 
         return null;

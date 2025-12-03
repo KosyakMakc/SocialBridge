@@ -1,6 +1,6 @@
 package io.github.kosyakmakc.socialBridge.SocialPlatforms;
 
-public enum SocialUserIdType {
+public enum IdentifierType {
     Integer,
     Long,
     UUID,

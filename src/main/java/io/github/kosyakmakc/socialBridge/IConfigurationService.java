@@ -1,6 +1,8 @@
 package io.github.kosyakmakc.socialBridge;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface IConfigurationService {
-    String get(String parameter, String defaultValue);
-    boolean set(String parameter, String value);
+    CompletableFuture<String> get(String parameter, String defaultValue);
+    CompletableFuture<Boolean> set(String parameter, String value);
 }
