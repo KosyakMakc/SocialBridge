@@ -252,6 +252,7 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
         return CompletableFuture.supplyAsync(() -> {
             try {
                 this.getConfig().set(parameter, value);
+                getLogger().info("plugin configuration change: " + parameter + "=" + value);
                 return true;
             }
             catch (Exception err) {

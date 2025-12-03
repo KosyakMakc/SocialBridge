@@ -6,9 +6,18 @@ import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
-public record ConfigurationService(ISocialBridge bridge) implements IConfigurationService {
+public class ConfigurationService implements IConfigurationService {
     public static final String DATABASE_VERSION = "DATABASE_VERSION";
+
+    private final ISocialBridge bridge;
+    private final Logger logger;
+
+    public ConfigurationService(ISocialBridge bridge) {
+        this.bridge = bridge;
+        this.logger = Logger.getLogger(bridge.getLogger().getName() + '.' + ConfigurationService.class.getSimpleName());
+    }
 
     public CompletableFuture<String> get(String parameter, String defaultValue) {
         return bridge.queryDatabase(databaseContext -> {
@@ -36,6 +45,7 @@ public record ConfigurationService(ISocialBridge bridge) implements IConfigurati
                     databaseContext.configurations.create(newRecord);
                 }
 
+                logger.info("database configuration change: " + parameter + "=" + value);
                 return true;
             } catch (SQLException e) {
                 e.printStackTrace();
