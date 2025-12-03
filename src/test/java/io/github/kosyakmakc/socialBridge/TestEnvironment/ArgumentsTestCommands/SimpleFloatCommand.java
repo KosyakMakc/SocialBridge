@@ -10,6 +10,7 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 
 public class SimpleFloatCommand extends SocialCommandBase {
     private float answer;
+    
     public SimpleFloatCommand() {
         super("single argument", List.of(CommandArgument.ofFloat("single argument")));
     }

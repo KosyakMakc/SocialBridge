@@ -19,7 +19,6 @@ public class ApplyDatabaseMigrations implements Consumer<ISocialBridge> {
     @Override
     public void accept(ISocialBridge bridge) {
         var logger = bridge.getLogger();
-        logger.warning("DUBG");
         var configurationService = bridge.getConfigurationService();
 
         var databaseVersion = configurationService.getDatabaseVersion().join();

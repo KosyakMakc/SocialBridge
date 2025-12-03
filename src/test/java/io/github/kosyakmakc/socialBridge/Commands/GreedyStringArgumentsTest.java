@@ -34,8 +34,6 @@ public class GreedyStringArgumentsTest {
         "0xff, 0xff, false",
     })
     void simpleIntegerCheck(String answer, String raw, boolean isError) throws SQLException, IOException {
-        
-
         HeadlessMinecraftPlatform.Init();
         try {
             var module = SocialBridge.INSTANCE.getModule(ArgumentsTestModule.class);

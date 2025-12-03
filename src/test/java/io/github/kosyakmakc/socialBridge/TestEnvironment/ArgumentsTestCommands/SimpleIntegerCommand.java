@@ -11,6 +11,7 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 
 public class SimpleIntegerCommand extends SocialCommandBase {
     private int answer;
+    
     public SimpleIntegerCommand() {
         super("single argument", List.of(CommandArgument.ofInteger("single argument")));
     }

@@ -10,6 +10,7 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 
 public class SimpleWordStringCommand extends SocialCommandBase {
     private String answer;
+    
     public SimpleWordStringCommand() {
         super("single argument", List.of(CommandArgument.ofWord("single argument")));
     }

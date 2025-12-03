@@ -10,10 +10,11 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 
 public class SimpleBooleanCommand extends SocialCommandBase {
     private boolean answer;
+
     public SimpleBooleanCommand() {
         super("single argument", List.of(CommandArgument.ofBoolean("single argument")));
     }
-    
+
     public void prepareAnswer(boolean answer) {
         this.answer = answer;
     }

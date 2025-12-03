@@ -10,6 +10,7 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 
 public class SimpleGreedyStringCommand extends SocialCommandBase {
     private String answer;
+    
     public SimpleGreedyStringCommand() {
         super("single argument", List.of(CommandArgument.ofGreedyString("single argument")));
     }

@@ -35,8 +35,6 @@ public class IntegerArgumentsTest {
         "255, 0xff, true", // :(
     })
     void simpleIntegerCheck(int answer, String raw, boolean isError) throws SQLException, IOException {
-        
-
         HeadlessMinecraftPlatform.Init();
         try {
             var module = SocialBridge.INSTANCE.getModule(ArgumentsTestModule.class);
