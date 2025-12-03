@@ -52,6 +52,7 @@ public abstract class SocialCommandBase implements ISocialCommand {
     @Override
     public CompletableFuture<Void> disable() {
         bridge = null;
+        logger = null;
         return CompletableFuture.completedFuture(null);
     }
 
@@ -64,7 +65,7 @@ public abstract class SocialCommandBase implements ISocialCommand {
     @Override
     public void handle(SocialUser sender, StringReader argsReader) throws ArgumentFormatException {
         if (bridge == null) {
-            getBridge().getLogger().info(this.getClass().getName() + " - initialization failed, skip handling");
+            Logger.getGlobal().info(this.getClass().getName() + " - initialization failed, skip handling");
             return;
         }
 
