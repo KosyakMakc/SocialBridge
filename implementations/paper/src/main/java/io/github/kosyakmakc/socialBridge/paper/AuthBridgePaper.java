@@ -121,7 +121,9 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
         return ctx -> {
             var sender = ctx.getSource().getSender();
 
-            var mcPlatformUser = sender instanceof Player player ? new BukkitMinecraftUser(player) : null;
+            var mcPlatformUser = sender instanceof Player player ? new BukkitMinecraftUser(player, this) : null;
+            // TODO what about another CommandSender?
+
             try {
                 var args = ctx.getInput();
                 var reader = new StringReader(args);
