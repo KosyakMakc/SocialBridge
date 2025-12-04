@@ -215,10 +215,10 @@ public class SocialBridge implements ISocialBridge {
         }
     }
 
-    private static final Pattern moduleNameValidation = Pattern.compile("[\s\\\"\'`-]"); // no whitespaces, escape symbol, dash symbol and quotas
+    private static final Pattern moduleNameValidation = Pattern.compile("[\\s\\\"'`\\-\\.]"); // no whitespaces, escape symbol, dash symbol and quotas
     
-    private static final Pattern socialCommandNameValidation = Pattern.compile("[\s\\\"\'`-]"); // no whitespaces, escape symbol, dash symbol and quotas
-    private static final Pattern minecraftCommandNameValidation = Pattern.compile("[\s\\\"\'`]"); // no whitespaces, escape symbol and quotas
+    private static final Pattern socialCommandNameValidation = Pattern.compile("[\\s\\\"'`\\-]"); // no whitespaces, escape symbol, dash symbol and quotas
+    private static final Pattern minecraftCommandNameValidation = Pattern.compile("[\\s\\\"'`]"); // no whitespaces, escape symbol and quotas
 
     private static final Pattern translationLanguageValidation = Pattern.compile("^[a-z]{2}$"); // no whitespaces, escape symbol and quotas
     private static final Pattern translationKeyValidation = Pattern.compile("^[a-zA-Z_]+$"); // no whitespaces, escape symbol and quotas
