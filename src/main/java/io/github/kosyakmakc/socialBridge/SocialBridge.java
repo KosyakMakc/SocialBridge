@@ -215,13 +215,18 @@ public class SocialBridge implements ISocialBridge {
         }
     }
 
-    private static final Pattern moduleNameValidation = Pattern.compile("[\\s\\\"'`\\-\\.]"); // no whitespaces, escape symbol, dash symbol and quotas
+    // no whitespaces, escape symbol, dash symbol, dot symbol and quotas
+    private static final Pattern moduleNameValidation = Pattern.compile("[\\s\\\"'`\\-\\.]");
     
-    private static final Pattern socialCommandNameValidation = Pattern.compile("[\\s\\\"'`\\-]"); // no whitespaces, escape symbol, dash symbol and quotas
-    private static final Pattern minecraftCommandNameValidation = Pattern.compile("[\\s\\\"'`]"); // no whitespaces, escape symbol and quotas
+    // no whitespaces, escape symbol, dash symbol, dot symbol and quotas
+    private static final Pattern socialCommandNameValidation = Pattern.compile("[\\s\\\"'`\\-\\.]");
+    // no whitespaces, escape symbol, dot symbol and quotas
+    private static final Pattern minecraftCommandNameValidation = Pattern.compile("[\\s\\\"'`\\.]");
 
-    private static final Pattern translationLanguageValidation = Pattern.compile("^[a-z]{2}$"); // no whitespaces, escape symbol and quotas
-    private static final Pattern translationKeyValidation = Pattern.compile("^[a-zA-Z_]+$"); // no whitespaces, escape symbol and quotas
+    // 2 char template in lower case: en, de, cz, ru, ua, ja and etc
+    private static final Pattern translationLanguageValidation = Pattern.compile("^[a-z]{2}$");
+    // Simple_Word_Identifier
+    private static final Pattern translationKeyValidation = Pattern.compile("^[a-zA-Z_]+$");
 
     private void ValidateAndThrowModule(IBridgeModule module) {
         for (var existedModule : getModules()) {
