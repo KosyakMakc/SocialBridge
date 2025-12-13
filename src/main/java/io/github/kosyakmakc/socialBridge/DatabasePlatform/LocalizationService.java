@@ -29,24 +29,14 @@ public class LocalizationService {
         logger = Logger.getLogger(bridge.getLogger().getName() + '.' + LocalizationService.class.getSimpleName());
     }
 
-    public String getMessage(IBridgeModule module, String locale, MessageKey key) {
-        var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
-        if (moduleCache == null) {
-            moduleCache = new ConcurrentHashMap<>();
-            inMemoryCache.put(module.getId(), moduleCache);
-        }
-        var languageCache = moduleCache.getOrDefault(locale, null);
-        if (languageCache == null) {
-            languageCache = new ConcurrentHashMap<>();
-            moduleCache.put(locale, languageCache);
-        }
-        var localization = languageCache.getOrDefault(key.key(), null);
+    public CompletableFuture<String> getMessage(IBridgeModule module, String locale, MessageKey key) {
+        var localization = searchByCache(module, key.key(), null);
         if (localization != null) {
-            return localization;
+            return CompletableFuture.completedFuture(localization);
         }
 
         try {
-            localization = bridge.queryDatabase(databaseContext -> {
+            return bridge.queryDatabase(databaseContext -> {
                 List<Localization> records;
                 try {
                     records = databaseContext.localizations.queryBuilder()
@@ -76,17 +66,52 @@ public class LocalizationService {
                 return x;
             })
             .thenApply(x -> {
-                return x != null ? x : key.key();
-            })
-            .join();
-
-            languageCache.put(key.key(), localization);
-            return localization;
+                var localization2 = x instanceof String y ? y : key.key();
+                appendToCache(module, locale, key, localization2);
+                return localization2;
+            });
         }
         catch (Exception error) {
             logger.log(Level.SEVERE, "failed localization search", error);
-            return "internal database error";
+            return CompletableFuture.completedFuture("internal database error");
             
+        }
+    }
+
+    private String searchByCache(IBridgeModule module, String locale, MessageKey key) {
+        var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
+        if (moduleCache == null) {
+            moduleCache = new ConcurrentHashMap<>();
+            inMemoryCache.put(module.getId(), moduleCache);
+        }
+        var languageCache = moduleCache.getOrDefault(locale, null);
+        if (languageCache == null) {
+            languageCache = new ConcurrentHashMap<>();
+            moduleCache.put(locale, languageCache);
+        }
+        var localization = languageCache.getOrDefault(key.key(), null);
+        if (localization != null) {
+            return localization;
+        }
+        else {
+            return null;
+        }
+    }
+
+    private void appendToCache(IBridgeModule module, String locale, MessageKey key,  String localization) {
+        var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
+        if (moduleCache == null) {
+            moduleCache = new ConcurrentHashMap<>();
+            inMemoryCache.put(module.getId(), moduleCache);
+        }
+        var languageCache = moduleCache.getOrDefault(locale, null);
+        if (languageCache == null) {
+            languageCache = new ConcurrentHashMap<>();
+            moduleCache.put(locale, languageCache);
+        }
+        var existedLocalization = languageCache.getOrDefault(key.key(), null);
+        if (existedLocalization == null) {
+            languageCache.put(key.key(), localization);
         }
     }
 
