@@ -30,7 +30,7 @@ public class LocalizationService {
     }
 
     public CompletableFuture<String> getMessage(IBridgeModule module, String locale, MessageKey key) {
-        var localization = searchByCache(module, key.key(), null);
+        var localization = searchByCache(module, key.key(), key);
         if (localization != null) {
             return CompletableFuture.completedFuture(localization);
         }

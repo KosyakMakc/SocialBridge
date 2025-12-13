@@ -134,23 +134,22 @@ public final class AuthBridgePaper extends JavaPlugin implements IMinecraftPlatf
                 bridgeCommand.handle(mcPlatformUser, reader);
             } catch (ArgumentFormatException e) {
                 if (mcPlatformUser != null) {
-                    mcPlatformUser.sendMessage(
-                        socialBridge.getLocalizationService().getMessage(
-                            socialBridge.getModule(DefaultModule.class),
-                            mcPlatformUser.getLocale(),
-                            e.getMessageKey()
-                        ),
-                        new HashMap<>()
-                    );
+                    socialBridge.getLocalizationService().getMessage(
+                        socialBridge.getModule(DefaultModule.class),
+                        mcPlatformUser.getLocale(),
+                        e.getMessageKey()
+                    )
+                    .thenAccept(msgTemplate -> 
+                        mcPlatformUser.sendMessage(msgTemplate, new HashMap<>()));
                 }
                 else {
-                    getLogger().warning(
-                        socialBridge.getLocalizationService().getMessage(
-                            socialBridge.getModule(DefaultModule.class),
-                            LocalizationService.defaultLocale,
-                            e.getMessageKey()
-                        )
-                    );
+                    socialBridge.getLocalizationService().getMessage(
+                        socialBridge.getModule(DefaultModule.class),
+                        LocalizationService.defaultLocale,
+                        e.getMessageKey()
+                    )
+                    .thenAccept(msgTemplate -> 
+                        getLogger().warning(msgTemplate));
                 }
             }
             return SINGLE_SUCCESS;
