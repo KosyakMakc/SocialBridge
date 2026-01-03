@@ -2,13 +2,13 @@ package io.github.kosyakmakc.socialBridge.Commands;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface ICommand {
-    CompletableFuture<Void> enable(IBridgeModule bridge);
+    CompletableFuture<Void> enable(ISocialModule bridge);
     CompletableFuture<Void> disable();
 
     @SuppressWarnings("rawtypes")

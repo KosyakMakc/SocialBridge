@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
@@ -14,7 +14,7 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.IT
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
-public class ModuleForTest implements IBridgeModule, AutoCloseable {
+public class ModuleForTest implements ISocialModule, AutoCloseable {
     private UUID moduleId = UUID.randomUUID();
     private Version version = HeadlessMinecraftPlatform.VERSION;
 

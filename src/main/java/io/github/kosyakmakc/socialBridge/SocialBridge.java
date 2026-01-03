@@ -27,7 +27,7 @@ public class SocialBridge implements ISocialBridge {
     @SuppressWarnings("rawtypes")
     private final Map<Class, ISocialPlatform> socialPlatforms;
     @SuppressWarnings("rawtypes")
-    private final Map<Class, IBridgeModule> bridgeModules;
+    private final Map<Class, ISocialModule> bridgeModules;
     private final DatabaseContext databaseContext;
 
     private final ConfigurationService configurationService;
@@ -185,7 +185,7 @@ public class SocialBridge implements ISocialBridge {
     }
 
     @Override
-    public CompletableFuture<Boolean> connectModule(IBridgeModule module) {
+    public CompletableFuture<Boolean> connectModule(ISocialModule module) {
         var logger = getLogger();
         logger.info("Registering module '" + module.getName() + "' (" +  module.getCompabilityVersion().toString() + ")");
 
@@ -233,7 +233,7 @@ public class SocialBridge implements ISocialBridge {
     // Simple_Word_Identifier
     private static final Pattern translationKeyValidation = Pattern.compile("^[a-zA-Z_]+$");
 
-    private void ValidateAndThrowModule(IBridgeModule module) {
+    private void ValidateAndThrowModule(ISocialModule module) {
         for (var existedModule : getModules()) {
             if (existedModule.getId().equals(module.getId())) {
                 throw new RuntimeException("Duplication module UUID detected");
@@ -278,7 +278,7 @@ public class SocialBridge implements ISocialBridge {
         }
     }
 
-    private CompletableFuture<Void> connectModuleToSocialPlatforms(IBridgeModule module) {
+    private CompletableFuture<Void> connectModuleToSocialPlatforms(ISocialModule module) {
         return CompletableFuture.allOf(
             getSocialPlatforms()
             .stream()
@@ -293,11 +293,11 @@ public class SocialBridge implements ISocialBridge {
             .toArray(CompletableFuture[]::new));
     }
 
-    private CompletableFuture<Void> connectModuleToMinecraftPlatform(IBridgeModule module) {
+    private CompletableFuture<Void> connectModuleToMinecraftPlatform(ISocialModule module) {
         return minecraftPlatform.connectModule(module);
     }
 
-    private CompletableFuture<Void> enableMinecraftCommands(IBridgeModule module) {
+    private CompletableFuture<Void> enableMinecraftCommands(ISocialModule module) {
         return CompletableFuture.allOf(
             module
                 .getMinecraftCommands()
@@ -313,7 +313,7 @@ public class SocialBridge implements ISocialBridge {
                 .toArray(CompletableFuture[]::new));
     }
 
-    private CompletableFuture<Void> enableSocialCommands(IBridgeModule module) {
+    private CompletableFuture<Void> enableSocialCommands(ISocialModule module) {
         return CompletableFuture.allOf(
             module
                 .getSocialCommands()
@@ -330,7 +330,7 @@ public class SocialBridge implements ISocialBridge {
     }
 
     @Override
-    public CompletableFuture<Void> disconnectModule(IBridgeModule module) {
+    public CompletableFuture<Void> disconnectModule(ISocialModule module) {
         var logger = getLogger();
         logger.info("disconnect module '" + module.getName() + "' (" +  module.getCompabilityVersion().toString() + ")");
 
@@ -350,7 +350,7 @@ public class SocialBridge implements ISocialBridge {
         }
     }
 
-    private CompletableFuture<Void> disableSocialCommands(IBridgeModule module) {
+    private CompletableFuture<Void> disableSocialCommands(ISocialModule module) {
         return CompletableFuture.allOf(
             module
                 .getSocialCommands()
@@ -366,7 +366,7 @@ public class SocialBridge implements ISocialBridge {
                 .toArray(CompletableFuture[]::new));
     }
 
-    private CompletableFuture<Void> disableMinecraftCommands(IBridgeModule module) {
+    private CompletableFuture<Void> disableMinecraftCommands(ISocialModule module) {
         return CompletableFuture.allOf(
             module
                 .getMinecraftCommands()
@@ -382,7 +382,7 @@ public class SocialBridge implements ISocialBridge {
                 .toArray(CompletableFuture[]::new));
     }
 
-    private CompletableFuture<Void> disconnectModuleFromSocialPlatforms(IBridgeModule module) {
+    private CompletableFuture<Void> disconnectModuleFromSocialPlatforms(ISocialModule module) {
         return CompletableFuture
             .allOf(
                 getSocialPlatforms()
@@ -401,13 +401,13 @@ public class SocialBridge implements ISocialBridge {
     }
 
     @Override
-    public Collection<IBridgeModule> getModules() {
+    public Collection<ISocialModule> getModules() {
         return bridgeModules.values();
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends IBridgeModule> T getModule(Class<T> tClass) {
+    public <T extends ISocialModule> T getModule(Class<T> tClass) {
         var module = bridgeModules.getOrDefault(tClass, null);
         if (module != null) {
             return (T) module;

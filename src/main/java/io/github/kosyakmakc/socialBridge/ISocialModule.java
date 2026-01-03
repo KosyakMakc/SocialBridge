@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public interface IBridgeModule {
+public interface ISocialModule {
     Version getCompabilityVersion();
     UUID getId();
     String getName();

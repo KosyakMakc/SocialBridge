@@ -2,7 +2,7 @@ package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRow;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
@@ -23,7 +23,7 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
-    public CompletableFuture<String> get(IBridgeModule module, String parameter, String defaultValue) {
+    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue) {
         return get(module.getId(), parameter, defaultValue);
     }
 
@@ -52,7 +52,7 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
-    public CompletableFuture<Boolean> set(IBridgeModule module, String parameter, String value) {
+    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
         return set(module.getId(), parameter, value)
         .thenApply(status -> {
             if (status) {

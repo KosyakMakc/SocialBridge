@@ -9,7 +9,7 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
@@ -65,7 +65,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(IBridgeModule module) {
+    public CompletableFuture<Void> connectModule(ISocialModule module) {
         return CompletableFuture.runAsync(() -> {
             if (module.getLoader() instanceof JavaPlugin externalPlugin) {
                 externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
@@ -228,7 +228,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         });
     }
     @Override
-    public CompletableFuture<String> get(IBridgeModule module, String parameter, String defaultValue) {
+    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue) {
         return get(module.getId(), parameter, defaultValue);
     }
 
@@ -247,7 +247,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Boolean> set(IBridgeModule module, String parameter, String value) {
+    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
         return set(module.getId(), parameter, value);
     }
 
