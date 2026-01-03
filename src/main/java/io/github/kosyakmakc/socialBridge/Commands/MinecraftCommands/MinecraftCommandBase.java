@@ -2,7 +2,7 @@ package io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatException;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
@@ -47,7 +47,7 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
     }
 
     @Override
-    public CompletableFuture<Void> enable(IBridgeModule module) {
+    public CompletableFuture<Void> enable(ISocialModule module) {
         bridge = module.getBridge();
         logger = Logger.getLogger(bridge.getLogger().getName() + '.' + module.getName() + '.' + getLiteral());
         return CompletableFuture.completedFuture(null);
@@ -106,7 +106,7 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
             arguments.add(valueItem);
         }
 
-        sender.HasPermission(permissionNode).thenAccept(hasPermission -> {
+        sender.hasPermission(permissionNode).thenAccept(hasPermission -> {
             if (hasPermission) {
                 execute(sender, arguments);
             }

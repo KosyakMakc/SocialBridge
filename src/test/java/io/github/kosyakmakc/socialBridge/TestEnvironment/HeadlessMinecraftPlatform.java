@@ -1,7 +1,7 @@
 package io.github.kosyakmakc.socialBridge.TestEnvironment;
 
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     public static final Version VERSION = new Version("0.5.0");
-    private LinkedBlockingQueue<IBridgeModule> registeredModules = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<ISocialModule> registeredModules = new LinkedBlockingQueue<>();
     private HashMap<UUID, HashMap<String, String>> config = new HashMap<>();
 
     @Override
@@ -37,7 +37,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<String> get(IBridgeModule module, String parameter, String defaultValue) {
+    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue) {
         return get(module.getId(), parameter, defaultValue);
     }
 
@@ -54,7 +54,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<Boolean> set(IBridgeModule module, String parameter, String value) {
+    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
         return set(module.getId(), parameter, value);
     }
 
@@ -89,7 +89,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(IBridgeModule module) {
+    public CompletableFuture<Void> connectModule(ISocialModule module) {
         registeredModules.add(module);
         return CompletableFuture.completedFuture(null);
     }

@@ -2,7 +2,7 @@ package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.Localization;
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
@@ -29,7 +29,7 @@ public class LocalizationService {
         logger = Logger.getLogger(bridge.getLogger().getName() + '.' + LocalizationService.class.getSimpleName());
     }
 
-    public CompletableFuture<String> getMessage(IBridgeModule module, String locale, MessageKey key) {
+    public CompletableFuture<String> getMessage(ISocialModule module, String locale, MessageKey key) {
         var localization = searchByCache(module, key.key(), key);
         if (localization != null) {
             return CompletableFuture.completedFuture(localization);
@@ -77,7 +77,7 @@ public class LocalizationService {
             });
     }
 
-    private String searchByCache(IBridgeModule module, String locale, MessageKey key) {
+    private String searchByCache(ISocialModule module, String locale, MessageKey key) {
         var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
         if (moduleCache == null) {
             moduleCache = new ConcurrentHashMap<>();
@@ -97,7 +97,7 @@ public class LocalizationService {
         }
     }
 
-    private void appendToCache(IBridgeModule module, String locale, MessageKey key,  String localization) {
+    private void appendToCache(ISocialModule module, String locale, MessageKey key,  String localization) {
         var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
         if (moduleCache == null) {
             moduleCache = new ConcurrentHashMap<>();
@@ -114,7 +114,7 @@ public class LocalizationService {
         }
     }
 
-    public CompletableFuture<Void> restoreLocalizationsOfModule(IBridgeModule module) {
+    public CompletableFuture<Void> restoreLocalizationsOfModule(ISocialModule module) {
         var moduleId = module.getId();
         logger.info("restoring localizations for module '" + module.getName() + "'");
 

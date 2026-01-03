@@ -40,7 +40,7 @@ public class BukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
-    public CompletableFuture<Boolean> HasPermission(String permission) {
+    public CompletableFuture<Boolean> hasPermission(String permission) {
         return CompletableFuture.completedFuture(player.hasPermission(permission));
     }
 

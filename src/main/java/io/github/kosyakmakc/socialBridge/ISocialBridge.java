@@ -28,8 +28,8 @@ public interface ISocialBridge {
 
     IMinecraftPlatform getMinecraftPlatform();
 
-    CompletableFuture<Boolean> connectModule(IBridgeModule module);
-    CompletableFuture<Void> disconnectModule(IBridgeModule module);
-    Collection<IBridgeModule> getModules();
-    <T extends IBridgeModule> T getModule(Class<T> tClass);
+    CompletableFuture<Boolean> connectModule(ISocialModule module);
+    CompletableFuture<Void> disconnectModule(ISocialModule module);
+    Collection<ISocialModule> getModules();
+    <T extends ISocialModule> T getModule(Class<T> tClass);
 }

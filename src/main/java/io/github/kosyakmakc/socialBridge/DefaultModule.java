@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class DefaultModule implements IBridgeModule {
+public class DefaultModule implements ISocialModule {
     public static final UUID MODULE_ID = UUID.fromString("dcab3770-b24e-44bb-b9a9-19edf96b9986");
     public static final String MODULE_NAME = "socialbridge";
 

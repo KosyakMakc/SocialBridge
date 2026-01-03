@@ -49,7 +49,7 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
-    public CompletableFuture<Boolean> HasPermission(String permission) {
+    public CompletableFuture<Boolean> hasPermission(String permission) {
         var provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
             return provider
