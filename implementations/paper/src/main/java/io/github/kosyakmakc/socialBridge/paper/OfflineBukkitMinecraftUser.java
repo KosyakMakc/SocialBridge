@@ -45,7 +45,6 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     public String getLocale() {
-
         return LocalizationService.defaultLocale;
     }
 
