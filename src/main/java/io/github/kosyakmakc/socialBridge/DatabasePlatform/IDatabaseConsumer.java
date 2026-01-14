@@ -1,6 +1,8 @@
 package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
+import java.util.concurrent.CompletableFuture;
+
 @FunctionalInterface
 public interface IDatabaseConsumer<T> {
-    T accept(DatabaseContext databaseContext);
+    CompletableFuture<T> accept(IDatabaseTransaction transaction);
 }

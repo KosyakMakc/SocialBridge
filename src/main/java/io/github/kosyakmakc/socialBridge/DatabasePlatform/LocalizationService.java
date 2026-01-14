@@ -35,30 +35,46 @@ public class LocalizationService {
             return CompletableFuture.completedFuture(localization);
         }
 
-        return bridge
-            .queryDatabase(databaseContext -> {
-                List<Localization> records;
-                try {
-                    records = databaseContext.localizations.queryBuilder()
-                            .where()
-                                .eq(Localization.MODULE_FIELD_NAME, module.getId())
-                                .and()
-                                .eq(Localization.LANGUAGE_FIELD_NAME, locale)
-                                .and()
-                                .eq(Localization.KEY_FIELD_NAME, key.key())
-                            .query();
-                } catch (SQLException e) {
-                    throw new CompletionException(e);
-                }
+        return getMessageFromDatabase(module, locale, key);
+    }
 
-                if (records.size() == 1) {
-                    return records.getFirst().getLocalization();
-                }
-                else {
-                    return null;
-                }
-            })
-            .thenCompose(x -> {
+    public CompletableFuture<String> getMessage(ISocialModule module, String locale, MessageKey key, IDatabaseTransaction transaction) {
+        var localization = searchByCache(module, key.key(), key);
+        if (localization != null) {
+            return CompletableFuture.completedFuture(localization);
+        }
+
+        return getMessageFromDatabase(module, locale, key, transaction);
+    }
+
+    private CompletableFuture<String> getMessageFromDatabase(ISocialModule module, String locale, MessageKey key) {
+        return bridge.queryDatabase(transaction -> getMessageFromDatabase(module, locale, key, transaction));
+    }
+
+    private CompletableFuture<String> getMessageFromDatabase(ISocialModule module, String locale, MessageKey key, IDatabaseTransaction transaction) {
+            List<Localization> records;
+            try {
+                records = transaction.getDatabaseContext().localizations.queryBuilder()
+                        .where()
+                            .eq(Localization.MODULE_FIELD_NAME, module.getId())
+                            .and()
+                            .eq(Localization.LANGUAGE_FIELD_NAME, locale)
+                            .and()
+                            .eq(Localization.KEY_FIELD_NAME, key.key())
+                        .query();
+            } catch (SQLException e) {
+                throw new CompletionException(e);
+            }
+
+            CompletableFuture<String> task;
+            if (records.size() == 1) {
+                task = CompletableFuture.completedFuture(records.getFirst().getLocalization());
+            }
+            else {
+                task = CompletableFuture.completedFuture(null);
+            }
+
+            return task.thenCompose(x -> {
                 if (x == null) {
                     if (!locale.equalsIgnoreCase(defaultLocale)) {
                         return getMessage(module, defaultLocale, key);
@@ -155,9 +171,9 @@ public class LocalizationService {
                         throw new RuntimeException("LocalizationRecord.Key() must be a not blank");
                     }
 
-                    return bridge.queryDatabase(databaseContext -> {
+                    return bridge.queryDatabase(transaction -> {
                         try {
-                            databaseContext.localizations.create(
+                            transaction.getDatabaseContext().localizations.create(
                                 new Localization(
                                     moduleId,
                                     source.getLanguage(),
@@ -177,7 +193,7 @@ public class LocalizationService {
                                 error.printStackTrace();
                             }
                         }
-                        return null;
+                        return CompletableFuture.completedFuture(null);
                     });
                 })
                 .toArray(CompletableFuture[]::new))

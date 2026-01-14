@@ -78,7 +78,15 @@ public class SocialBridge implements ISocialBridge {
 
     @Override
     public <T> CompletableFuture<T> queryDatabase(IDatabaseConsumer<T> action) {
-        return databaseContext.withTransaction(() -> action.accept(databaseContext) );
+        return databaseContext.withTransaction(() -> {
+            var transaction = new DatabaseTransaction(databaseContext);
+            return queryDatabase(action, transaction).join();
+        });
+    }
+
+    @Override
+    public <T> CompletableFuture<T> queryDatabase(IDatabaseConsumer<T> action, IDatabaseTransaction transaction) {
+        return action.accept(transaction);
     }
 
     @Override

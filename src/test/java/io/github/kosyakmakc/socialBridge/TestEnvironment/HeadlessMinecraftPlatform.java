@@ -6,6 +6,7 @@ import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.IDatabaseTransaction;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -20,7 +21,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     public static final String PLATFORM_NAME = "headless";
     public static final UUID PLATFORM_ID = UUID.fromString("c936579c-da7e-47dd-be85-d93f0558fab1");
 
-    public static final Version VERSION = new Version("0.6.3");
+    public static final Version VERSION = new Version("0.7.3");
     private LinkedBlockingQueue<ISocialModule> registeredModules = new LinkedBlockingQueue<>();
     private HashMap<UUID, HashMap<String, String>> config = new HashMap<>();
     private final UUID instanceId = UUID.randomUUID();
@@ -56,8 +57,18 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
+    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue, IDatabaseTransaction transaction) {
+        return get(module, parameter, defaultValue);
+    }
+
+        @Override
     public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue) {
         return get(module.getId(), parameter, defaultValue);
+    }
+
+    @Override
+    public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, IDatabaseTransaction transaction) {
+        return get(moduleId, parameter, defaultValue);
     }
 
     @Override
@@ -73,8 +84,18 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
+    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value, IDatabaseTransaction transaction) {
+        return set(module.getId(), parameter, value);
+    }
+
+    @Override
     public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
         return set(module.getId(), parameter, value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> set(UUID moduleId, String parameter, String value, IDatabaseTransaction transaction) {
+        return set(moduleId, parameter, value);
     }
 
     @Override
