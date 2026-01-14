@@ -28,38 +28,45 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
+    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue, IDatabaseTransaction transaction) {
+        return get(module.getId(), parameter, defaultValue, transaction);
+    }
+
+    @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue) {
-        return bridge.queryDatabase(databaseContext -> {
-            try {
-                var records = databaseContext.configurations.queryBuilder()
-                            .where()
-                                .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
-                                .and()
-                                .eq(ConfigRow.PARAMETER_FIELD_NAME, parameter)
-                            .query();
-                if (records.size() > 0) {
-                    var record = records.getFirst();
-                    return record.getValue();
-                }
-            } catch (SQLException e) {
-                // skip first sql query to not existed table
-                if (!e.getMessage().equals("[SQLITE_ERROR] SQL error or missing database (no such table: config)")) {
-                    e.printStackTrace();
-                }
+        return bridge.queryDatabase(transaction -> get(moduleId, parameter, defaultValue, transaction));
+    }
+
+    @Override
+    public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, IDatabaseTransaction transaction) {
+        try {
+            var records = transaction.getDatabaseContext().configurations.queryBuilder()
+                        .where()
+                            .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
+                            .and()
+                            .eq(ConfigRow.PARAMETER_FIELD_NAME, parameter)
+                        .query();
+            if (records.size() > 0) {
+                var record = records.getFirst();
+                return CompletableFuture.completedFuture(record.getValue());
             }
-            return defaultValue;
-        });
+        } catch (SQLException e) {
+            // skip first sql query to not existed table
+            if (!e.getMessage().equals("[SQLITE_ERROR] SQL error or missing database (no such table: config)")) {
+                e.printStackTrace();
+            }
+        }
+        return CompletableFuture.completedFuture(defaultValue);
     }
 
     @Override
     public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
-        return set(module.getId(), parameter, value)
-        .thenApply(status -> {
-            if (status) {
-                logger.info("database configuration change: " + module.getName() + "." + parameter + "=" + value);
-            }
-            return status;
-        });
+        return set(module.getId(), parameter, value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value, IDatabaseTransaction transaction) {
+        return set(module.getId(), parameter, value, transaction);
     }
 
     public CompletableFuture<Boolean> set(UUID moduleId, String parameter, String value) {
@@ -67,29 +74,36 @@ public class ConfigurationService implements IConfigurationService {
             throw new RuntimeException("Empty parameter name is not allowed");
         }
 
-        return bridge.queryDatabase(databaseContext -> {
-            try {
-                var records = databaseContext.configurations.queryBuilder()
-                            .where()
-                                .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
-                                .and()
-                                .eq(ConfigRow.PARAMETER_FIELD_NAME, parameter)
-                            .query();
-                if (records.size() > 0) {
-                    var record = records.getFirst();
-                    record.setValue(value);
-                    databaseContext.configurations.update(record);
-                } else {
-                    var newRecord = new ConfigRow(moduleId, parameter, value);
-                    databaseContext.configurations.create(newRecord);
-                }
+        return bridge.queryDatabase(transaction -> set(moduleId, parameter, value, transaction));
+    }
 
-                return true;
-            } catch (SQLException e) {
-                e.printStackTrace();
+    public CompletableFuture<Boolean> set(UUID moduleId, String parameter, String value, IDatabaseTransaction transaction) {
+        if (parameter.isBlank()) {
+            throw new RuntimeException("Empty parameter name is not allowed");
+        }
+
+        try {
+            var databaseContext = transaction.getDatabaseContext();
+            var records = databaseContext.configurations.queryBuilder()
+                        .where()
+                            .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
+                            .and()
+                            .eq(ConfigRow.PARAMETER_FIELD_NAME, parameter)
+                        .query();
+            if (records.size() > 0) {
+                var record = records.getFirst();
+                record.setValue(value);
+                databaseContext.configurations.update(record);
+            } else {
+                var newRecord = new ConfigRow(moduleId, parameter, value);
+                databaseContext.configurations.create(newRecord);
             }
-            return false;
-        });
+
+            return CompletableFuture.completedFuture(true);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return CompletableFuture.completedFuture(false);
     }
 
     public CompletableFuture<Integer> getDatabaseVersion() {
