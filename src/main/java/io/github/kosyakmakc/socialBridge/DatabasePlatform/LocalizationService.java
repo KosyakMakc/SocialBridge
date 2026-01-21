@@ -43,7 +43,7 @@ public class LocalizationService implements ILocalizationService {
 
     private CompletableFuture<String> getMessageFromStorage(ISocialModule module, String locale, MessageKey key, ITransaction transaction) {
         return transaction == null
-            ? bridge.queryDatabase(transaction2 -> getMessageFromDatabase(module, locale, key, transaction2))
+            ? bridge.doTransaction(transaction2 -> getMessageFromDatabase(module, locale, key, transaction2))
             : getMessageFromDatabase(module, locale, key, transaction);
     }
 
@@ -129,7 +129,7 @@ public class LocalizationService implements ILocalizationService {
     @Override
     public CompletableFuture<Boolean> setMessage(ISocialModule module, String locale, MessageKey key, String localization, ITransaction transaction) {
         return transaction == null
-            ? bridge.queryDatabase(transaction2 -> setMessageToDatabase(module, locale, key, localization, transaction2))
+            ? bridge.doTransaction(transaction2 -> setMessageToDatabase(module, locale, key, localization, transaction2))
             : setMessageToDatabase(module, locale, key, localization, transaction);
     }
 
@@ -217,7 +217,7 @@ public class LocalizationService implements ILocalizationService {
                         throw new RuntimeException("LocalizationRecord.Key() must be a not blank");
                     }
 
-                    return bridge.queryDatabase(transaction -> {
+                    return bridge.doTransaction(transaction -> {
                         try {
                             transaction.getDatabaseContext().localizations.create(
                                 new Localization(

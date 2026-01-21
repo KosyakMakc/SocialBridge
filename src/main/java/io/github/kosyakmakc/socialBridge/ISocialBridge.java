@@ -1,7 +1,6 @@
 package io.github.kosyakmakc.socialBridge;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationService;
-import io.github.kosyakmakc.socialBridge.DatabasePlatform.IDatabaseConsumer;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
@@ -17,8 +16,7 @@ public interface ISocialBridge {
     Logger getLogger();
     ILocalizationService getLocalizationService();
     ConfigurationService getConfigurationService();
-    <T> CompletableFuture<T> queryDatabase(IDatabaseConsumer<T> action);
-    <T> CompletableFuture<T> queryDatabase(IDatabaseConsumer<T> action, ITransaction transaction);
+    <T> CompletableFuture<T> doTransaction(ITransactionConsumer<T> action);
 
     BridgeEvents getEvents();
 

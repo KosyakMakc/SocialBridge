@@ -31,7 +31,7 @@ public class ConfigurationService implements IConfigurationService {
     @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
         return transaction == null
-            ? bridge.queryDatabase(transaction2 -> getFromDatabase(moduleId, parameter, defaultValue, transaction2))
+            ? bridge.doTransaction(transaction2 -> getFromDatabase(moduleId, parameter, defaultValue, transaction2))
             : getFromDatabase(moduleId, parameter, defaultValue, transaction);
     }
 
@@ -68,7 +68,7 @@ public class ConfigurationService implements IConfigurationService {
         }
 
         return transaction == null
-            ? bridge.queryDatabase(transaction2 -> set(moduleId, parameter, value, transaction2))
+            ? bridge.doTransaction(transaction2 -> set(moduleId, parameter, value, transaction2))
             : setToDatabase(moduleId, parameter, value, transaction);
     }
 

@@ -29,7 +29,7 @@ public class ApplyDatabaseMigrations implements Consumer<ISocialBridge> {
             for (var migration : migrations) {
                 if (migration.getVersion() > databaseVersion) {
                     logger.info("applying migration \"" + migration.getName() + "\" (version: " + migration.getVersion() + ").");
-                    bridge.queryDatabase(migration).join();
+                    bridge.doTransaction(migration).join();
                 }
             }
             logger.info("current database updated.");
