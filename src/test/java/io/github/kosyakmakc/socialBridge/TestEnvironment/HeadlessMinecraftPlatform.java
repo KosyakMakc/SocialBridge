@@ -1,10 +1,10 @@
 package io.github.kosyakmakc.socialBridge.TestEnvironment;
 
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 
@@ -22,7 +22,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     public static final UUID PLATFORM_ID = UUID.fromString("c936579c-da7e-47dd-be85-d93f0558fab1");
 
     public static final Version VERSION = new Version("0.8.3");
-    private LinkedBlockingQueue<ISocialModule> registeredModules = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<ISocialModuleBase> registeredModules = new LinkedBlockingQueue<>();
     private HashMap<UUID, HashMap<String, String>> config = new HashMap<>();
     private final UUID instanceId = UUID.randomUUID();
 
@@ -57,7 +57,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue, ITransaction transaction) {
+    public CompletableFuture<String> get(ISocialModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
         return get(module, parameter, defaultValue, transaction);
     }
 
@@ -74,7 +74,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value, ITransaction transaction) {
+    public CompletableFuture<Boolean> set(ISocialModuleBase module, String parameter, String value, ITransaction transaction) {
         return set(module.getId(), parameter, value, transaction);
     }
 
@@ -109,7 +109,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(ISocialModule module) {
+    public CompletableFuture<Void> connectModule(ISocialModuleBase module) {
         registeredModules.add(module);
         return CompletableFuture.completedFuture(null);
     }

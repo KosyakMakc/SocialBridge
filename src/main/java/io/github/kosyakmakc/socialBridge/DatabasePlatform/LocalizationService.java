@@ -2,7 +2,9 @@ package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.Localization;
-import io.github.kosyakmakc.socialBridge.ISocialModule;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithTranslations;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.ILocalizationService;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
@@ -176,20 +178,26 @@ public class LocalizationService implements ILocalizationService {
     }
 
     @Override
-    public CompletableFuture<Void> restoreLocalizationsOfModule(ISocialModule module) {
-        var moduleId = module.getId();
-        logger.info("restoring localizations for module '" + module.getName() + "'");
+    public CompletableFuture<Void> restoreLocalizationsOfModule(ISocialModuleBase module) {
+        if (module instanceof ISocialModuleWithTranslations moduleWithTranslations) {
 
-        if (!inMemoryCache.containsKey(moduleId)) {
-            inMemoryCache.put(moduleId, new ConcurrentHashMap<>());
+            var moduleId = module.getId();
+            logger.info("restoring localizations for module '" + module.getName() + "'");
+            
+            if (!inMemoryCache.containsKey(moduleId)) {
+                inMemoryCache.put(moduleId, new ConcurrentHashMap<>());
+            }
+
+            return CompletableFuture.allOf(
+                moduleWithTranslations
+                    .getTranslations()
+                    .stream()
+                    .map(x -> restoreLocalizationSource(x, moduleId))
+                    .toArray(CompletableFuture[]::new));
         }
-
-        return CompletableFuture.allOf(
-            module
-                .getTranslations()
-                .stream()
-                .map(x -> restoreLocalizationSource(x, moduleId))
-                .toArray(CompletableFuture[]::new));
+        else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     private CompletableFuture<Void> restoreLocalizationSource (ITranslationSource source, UUID moduleId) {

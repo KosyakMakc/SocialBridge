@@ -9,11 +9,12 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithMinecraftCommands;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -55,14 +56,14 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
             UUID localInstanceId;
             try {
-                localInstanceId = UUID.fromString(this.get(DefaultModule.MODULE_ID, "instanceID", "").join());
+                localInstanceId = UUID.fromString(this.get(DefaultModule.MODULE_ID, "instanceID", "", null).join());
             }
             catch (IllegalArgumentException err) {
                 localInstanceId = new UUID(0L, 0L);
             }
             if (localInstanceId.compareTo(new UUID(0L, 0L)) == 0) {
                 localInstanceId = UUID.randomUUID();
-                this.set(DefaultModule.MODULE_ID, "instanceID", localInstanceId.toString()).join();
+                this.set(DefaultModule.MODULE_ID, "instanceID", localInstanceId.toString(), null).join();
             }
 
             instanceId = localInstanceId;
@@ -106,48 +107,50 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(ISocialModule module) {
+    public CompletableFuture<Void> connectModule(ISocialModuleBase module) {
         return CompletableFuture.runAsync(() -> {
             if (module.getLoader() instanceof JavaPlugin externalPlugin) {
-                externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-                    var mcCommands = module.getMinecraftCommands();
-                    if (mcCommands.isEmpty()) {
-                        return;
-                    }
-                    
-                    var rootLiteral = Commands.literal(module.getName());
-                    
-                    for(var bridgeCommand : mcCommands) {
-                        var handler = HandleCommand(bridgeCommand);
-                        
-                        var cmd = Commands
-                        .literal(bridgeCommand.getLiteral())
-                        .executes(handler);
-                        
-                        var permission = bridgeCommand.getPermission();
-                        if (!permission.isEmpty()) {
-                            cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
+                if (module instanceof ISocialModuleWithMinecraftCommands moduleWithMinecraftCommands) {
+                    externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                        var mcCommands = moduleWithMinecraftCommands.getMinecraftCommands();
+                        if (mcCommands.isEmpty()) {
+                            return;
                         }
                         
-                        // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
-                        RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
-                        for (var argument : bridgeCommand.getArgumentDefinitions()) {
-                            var argumentNode = BuildArgumentNode(argument).executes(handler);
-                            
-                            if (prev == null) {
-                                cmd.then(argumentNode);
-                            }
-                            else {
-                                prev.then(argumentNode);
-                            }
-                            
-                            prev = argumentNode;
-                        }
+                        var rootLiteral = Commands.literal(module.getName());
                         
-                        rootLiteral.then(cmd);
-                    }
-                    commands.registrar().register(rootLiteral.build());
-                });
+                        for(var bridgeCommand : mcCommands) {
+                            var handler = HandleCommand(bridgeCommand);
+                            
+                            var cmd = Commands
+                            .literal(bridgeCommand.getLiteral())
+                            .executes(handler);
+                            
+                            var permission = bridgeCommand.getPermission();
+                            if (!permission.isEmpty()) {
+                                cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
+                            }
+                            
+                            // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
+                            RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
+                            for (var argument : bridgeCommand.getArgumentDefinitions()) {
+                                var argumentNode = BuildArgumentNode(argument).executes(handler);
+                                
+                                if (prev == null) {
+                                    cmd.then(argumentNode);
+                                }
+                                else {
+                                    prev.then(argumentNode);
+                                }
+                                
+                                prev = argumentNode;
+                            }
+                            
+                            rootLiteral.then(cmd);
+                        }
+                        commands.registrar().register(rootLiteral.build());
+                    });
+                }
             }
             else {
                 getLogger().warning("Detected not supported module loader for '" + module.getName() + "' module.");
@@ -181,7 +184,8 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                     socialBridge.getLocalizationService().getMessage(
                         socialBridge.getModule(DefaultModule.class),
                         mcPlatformUser.getLocale(),
-                        e.getMessageKey()
+                        e.getMessageKey(),
+                        null
                     )
                     .thenAccept(msgTemplate -> 
                         mcPlatformUser.sendMessage(msgTemplate, new HashMap<>()));
@@ -190,7 +194,8 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                     socialBridge.getLocalizationService().getMessage(
                         socialBridge.getModule(DefaultModule.class),
                         LocalizationService.defaultLocale,
-                        e.getMessageKey()
+                        e.getMessageKey(),
+                        null
                     )
                     .thenAccept(msgTemplate -> 
                         getLogger().warning(msgTemplate));
@@ -273,22 +278,16 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue, ITransaction transaction) {
-        return get(module.getId(), parameter, defaultValue);
-    }
-
-    @Override
-    public CompletableFuture<String> get(ISocialModule module, String parameter, String defaultValue) {
-        return get(module.getId(), parameter, defaultValue);
+    public CompletableFuture<String> get(ISocialModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
+        return get(module.getId(), parameter, defaultValue, transaction);
     }
 
     @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
-        return get(moduleId, parameter, defaultValue);
+        return getFromConfig(moduleId, parameter, defaultValue, transaction);
     }
 
-    @Override
-    public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue) {
+    private CompletableFuture<String> getFromConfig(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
         return CompletableFuture.supplyAsync(() -> {
             var config = this.getConfig();
 
@@ -302,22 +301,16 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value, ITransaction transaction) {
-        return set(module.getId(), parameter, value);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> set(ISocialModule module, String parameter, String value) {
-        return set(module.getId(), parameter, value);
+    public CompletableFuture<Boolean> set(ISocialModuleBase module, String parameter, String value, ITransaction transaction) {
+        return set(module.getId(), parameter, value, transaction);
     }
 
     @Override
     public CompletableFuture<Boolean> set(UUID moduleId, String parameter, String value, ITransaction transaction) {
-        return set(moduleId, parameter, value);
+        return setToConfig(moduleId, parameter, value);
     }
 
-    @Override
-    public CompletableFuture<Boolean> set(UUID moduleId, String parameter, String value) {
+    private CompletableFuture<Boolean> setToConfig(UUID moduleId, String parameter, String value) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 var config = this.getConfig();

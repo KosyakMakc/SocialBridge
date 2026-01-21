@@ -1,14 +1,5 @@
 package io.github.kosyakmakc.socialBridge;
 
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.logger.LogBackendType;
-import com.j256.ormlite.logger.LoggerFactory;
-
-import io.github.kosyakmakc.socialBridge.DatabasePlatform.*;
-import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
-import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
-import io.github.kosyakmakc.socialBridge.Utils.Version;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -20,6 +11,22 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.logger.LogBackendType;
+import com.j256.ormlite.logger.LoggerFactory;
+
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.ApplyDatabaseMigrations;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationService;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
+import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithMinecraftCommands;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithSocialCommands;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithTranslations;
+import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
+import io.github.kosyakmakc.socialBridge.Utils.Version;
+
 public class SocialBridge implements ISocialBridge {
     public static ISocialBridge INSTANCE;
 
@@ -28,8 +35,8 @@ public class SocialBridge implements ISocialBridge {
     private final Map<Class, ISocialPlatform> socialPlatformsByClass;
     private final Map<UUID, ISocialPlatform> socialPlatformsById;
     @SuppressWarnings("rawtypes")
-    private final Map<Class, ISocialModule> modulesByClass;
-    private final Map<UUID, ISocialModule> modulesById;
+    private final Map<Class, ISocialModuleBase> modulesByClass;
+    private final Map<UUID, ISocialModuleBase> modulesById;
     private final DatabaseContext databaseContext;
 
     private final ConfigurationService configurationService;
@@ -209,7 +216,7 @@ public class SocialBridge implements ISocialBridge {
     }
 
     @Override
-    public CompletableFuture<Boolean> connectModule(ISocialModule module) {
+    public CompletableFuture<Boolean> connectModule(ISocialModuleBase module) {
         var logger = getLogger();
         logger.info("Registering module '" + module.getName() + "' (" +  module.getCompabilityVersion().toString() + ")");
 
@@ -258,7 +265,7 @@ public class SocialBridge implements ISocialBridge {
     // Simple_Word_Identifier
     private static final Pattern translationKeyValidation = Pattern.compile("^[a-zA-Z_]+$");
 
-    private void ValidateAndThrowModule(ISocialModule module) {
+    private void ValidateAndThrowModule(ISocialModuleBase module) {
         var name = module.getName();
         for (var existedModule : getModules()) {
             if (existedModule.getName().equals(name)) {
@@ -279,36 +286,42 @@ public class SocialBridge implements ISocialBridge {
             throw new RuntimeException("Duplication module UUID detected");
         }
 
-        for (var socialCommand : module.getSocialCommands()) {
-            var matcher2 = socialCommandNameValidation.matcher(socialCommand.getLiteral());
-            if (matcher2.find()) {
-                throw new RuntimeException("Invalid social command name, please don't use whitespaces, escape symbol, dash symbol, dot symbol and quotas");
+        if (module instanceof ISocialModuleWithSocialCommands moduleWithSocialCommands) {
+            for (var socialCommand : moduleWithSocialCommands.getSocialCommands()) {
+                var matcher2 = socialCommandNameValidation.matcher(socialCommand.getLiteral());
+                if (matcher2.find()) {
+                    throw new RuntimeException("Invalid social command name, please don't use whitespaces, escape symbol, dash symbol, dot symbol and quotas");
+                }
             }
         }
 
-        for (var minecraftCommand : module.getMinecraftCommands()) {
-            var matcher3 = minecraftCommandNameValidation.matcher(minecraftCommand.getLiteral());
-            if (matcher3.find()) {
-                throw new RuntimeException("Invalid social command name, please don't use whitespaces, escape symbol, dot symbol and quotas");
+        if (module instanceof ISocialModuleWithMinecraftCommands moduleWithMinecraftCommands) {
+            for (var minecraftCommand : moduleWithMinecraftCommands.getMinecraftCommands()) {
+                var matcher3 = minecraftCommandNameValidation.matcher(minecraftCommand.getLiteral());
+                if (matcher3.find()) {
+                    throw new RuntimeException("Invalid social command name, please don't use whitespaces, escape symbol, dot symbol and quotas");
+                }
             }
         }
 
-        for (var translationSource : module.getTranslations()) {
-            var matcher4 = translationLanguageValidation.matcher(translationSource.getLanguage());
-            if (!matcher4.find()) {
-                throw new RuntimeException("Invalid translation language name, please use ISO 639 (2 symbols of [a-z])");
-            }
-
-            for (var record : translationSource.getRecords()) {
-                var matcher5 = translationKeyValidation.matcher(record.key());
-                if (!matcher5.find()) {
-                    throw new RuntimeException("Invalid translation key name, please use [a-zA-Z_] symbols");
+        if (module instanceof ISocialModuleWithTranslations moduleWithTranslations) {
+            for (var translationSource : moduleWithTranslations.getTranslations()) {
+                var matcher4 = translationLanguageValidation.matcher(translationSource.getLanguage());
+                if (!matcher4.find()) {
+                    throw new RuntimeException("Invalid translation language name, please use ISO 639 (2 symbols of [a-z])");
+                }
+                
+                for (var record : translationSource.getRecords()) {
+                    var matcher5 = translationKeyValidation.matcher(record.key());
+                    if (!matcher5.find()) {
+                        throw new RuntimeException("Invalid translation key name, please use [a-zA-Z_] symbols");
+                    }
                 }
             }
         }
     }
 
-    private CompletableFuture<Void> connectModuleToSocialPlatforms(ISocialModule module) {
+    private CompletableFuture<Void> connectModuleToSocialPlatforms(ISocialModuleBase module) {
         return CompletableFuture.allOf(
             getSocialPlatforms()
             .stream()
@@ -323,29 +336,35 @@ public class SocialBridge implements ISocialBridge {
             .toArray(CompletableFuture[]::new));
     }
 
-    private CompletableFuture<Void> connectModuleToMinecraftPlatform(ISocialModule module) {
+    private CompletableFuture<Void> connectModuleToMinecraftPlatform(ISocialModuleBase module) {
         return minecraftPlatform.connectModule(module);
     }
 
-    private CompletableFuture<Void> enableMinecraftCommands(ISocialModule module) {
-        return CompletableFuture.allOf(
-            module
-                .getMinecraftCommands()
-                .stream()
-                .map(command -> command
-                    .enable(module)
-                    .handle((Void2, error) -> {
-                        if (error != null) {
-                            error.printStackTrace();
-                        }
-                        return null;
-                    }))
-                .toArray(CompletableFuture[]::new));
+    private CompletableFuture<Void> enableMinecraftCommands(ISocialModuleBase module) {
+        if (module instanceof ISocialModuleWithMinecraftCommands moduleWithMinecraftCommands) {
+            return CompletableFuture.allOf(
+                moduleWithMinecraftCommands
+                    .getMinecraftCommands()
+                    .stream()
+                    .map(command -> command
+                        .enable(module)
+                        .handle((Void2, error) -> {
+                            if (error != null) {
+                                error.printStackTrace();
+                            }
+                            return null;
+                        }))
+                    .toArray(CompletableFuture[]::new));
+        }
+        else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
-    private CompletableFuture<Void> enableSocialCommands(ISocialModule module) {
-        return CompletableFuture.allOf(
-            module
+    private CompletableFuture<Void> enableSocialCommands(ISocialModuleBase module) {
+        if (module instanceof ISocialModuleWithSocialCommands moduleWithSocialCommands) {
+            return CompletableFuture.allOf(
+                moduleWithSocialCommands
                 .getSocialCommands()
                 .stream()
                 .map(command -> command
@@ -356,11 +375,15 @@ public class SocialBridge implements ISocialBridge {
                         }
                         return null;
                     }))
-                .toArray(CompletableFuture[]::new));
+                    .toArray(CompletableFuture[]::new));
+        }
+        else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     @Override
-    public CompletableFuture<Void> disconnectModule(ISocialModule module) {
+    public CompletableFuture<Void> disconnectModule(ISocialModuleBase module) {
         var logger = getLogger();
         logger.info("disconnect module '" + module.getName() + "' (" +  module.getCompabilityVersion().toString() + ")");
 
@@ -381,9 +404,10 @@ public class SocialBridge implements ISocialBridge {
         }
     }
 
-    private CompletableFuture<Void> disableSocialCommands(ISocialModule module) {
-        return CompletableFuture.allOf(
-            module
+    private CompletableFuture<Void> disableSocialCommands(ISocialModuleBase module) {
+        if (module instanceof ISocialModuleWithSocialCommands moduleWithSocialCommands) {
+            return CompletableFuture.allOf(
+                moduleWithSocialCommands
                 .getSocialCommands()
                 .stream()
                 .map(command -> command
@@ -394,26 +418,35 @@ public class SocialBridge implements ISocialBridge {
                         }
                         return null;
                     }))
-                .toArray(CompletableFuture[]::new));
+                    .toArray(CompletableFuture[]::new));
+        }
+        else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
-    private CompletableFuture<Void> disableMinecraftCommands(ISocialModule module) {
-        return CompletableFuture.allOf(
-            module
-                .getMinecraftCommands()
-                .stream()
-                .map(command -> command
-                    .disable()
-                    .handle((Void2, error) -> {
-                        if (error != null) {
-                            error.printStackTrace();
-                        }
-                        return null;
-                    }))
-                .toArray(CompletableFuture[]::new));
+    private CompletableFuture<Void> disableMinecraftCommands(ISocialModuleBase module) {
+        if (module instanceof ISocialModuleWithMinecraftCommands moduleWithMinecraftCommands) {
+            return CompletableFuture.allOf(
+                moduleWithMinecraftCommands
+                    .getMinecraftCommands()
+                    .stream()
+                    .map(command -> command
+                        .disable()
+                        .handle((Void2, error) -> {
+                            if (error != null) {
+                                error.printStackTrace();
+                            }
+                            return null;
+                        }))
+                    .toArray(CompletableFuture[]::new));
+        }
+        else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
-    private CompletableFuture<Void> disconnectModuleFromSocialPlatforms(ISocialModule module) {
+    private CompletableFuture<Void> disconnectModuleFromSocialPlatforms(ISocialModuleBase module) {
         return CompletableFuture
             .allOf(
                 getSocialPlatforms()
@@ -432,13 +465,13 @@ public class SocialBridge implements ISocialBridge {
     }
 
     @Override
-    public Collection<ISocialModule> getModules() {
+    public Collection<ISocialModuleBase> getModules() {
         return modulesByClass.values();
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends ISocialModule> T getModule(Class<T> tClass) {
+    public <T extends ISocialModuleBase> T getModule(Class<T> tClass) {
         var module = modulesByClass.getOrDefault(tClass, null);
         if (module != null) {
             return (T) module;
@@ -448,7 +481,7 @@ public class SocialBridge implements ISocialBridge {
         }
     }
     @Override
-    public ISocialModule getModule(UUID moduleId) {
+    public ISocialModuleBase getModule(UUID moduleId) {
         return modulesById.getOrDefault(moduleId, null);
     }
 
