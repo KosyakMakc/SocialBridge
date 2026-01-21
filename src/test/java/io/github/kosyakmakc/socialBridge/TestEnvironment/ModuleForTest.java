@@ -11,10 +11,10 @@ import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCo
 import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.ISocialCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
+import io.github.kosyakmakc.socialBridge.Modules.IModule;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
-public class ModuleForTest implements ISocialModule, AutoCloseable {
+public class ModuleForTest implements IModule, AutoCloseable {
     private UUID moduleId = UUID.randomUUID();
     private Version version = HeadlessMinecraftPlatform.VERSION;
 

@@ -2,7 +2,7 @@ package io.github.kosyakmakc.socialBridge;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
@@ -29,9 +29,9 @@ public interface ISocialBridge {
 
     IMinecraftPlatform getMinecraftPlatform();
 
-    CompletableFuture<Boolean> connectModule(ISocialModuleBase module);
-    CompletableFuture<Void> disconnectModule(ISocialModuleBase module);
-    Collection<ISocialModuleBase> getModules();
-    <T extends ISocialModuleBase> T getModule(Class<T> tClass);
-    ISocialModuleBase getModule(UUID moduleId);
+    CompletableFuture<Boolean> connectModule(IModuleBase module);
+    CompletableFuture<Void> disconnectModule(IModuleBase module);
+    Collection<IModuleBase> getModules();
+    <T extends IModuleBase> T getModule(Class<T> tClass);
+    IModuleBase getModule(UUID moduleId);
 }

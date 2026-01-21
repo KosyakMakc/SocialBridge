@@ -4,6 +4,6 @@ import java.util.Collection;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 
-public interface ISocialModuleWithTranslations {
+public interface ITranslationsModule extends IModuleBase {
     Collection<ITranslationSource> getTranslations();
 }

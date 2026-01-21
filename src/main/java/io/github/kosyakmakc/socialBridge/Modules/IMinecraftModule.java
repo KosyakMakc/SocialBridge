@@ -4,6 +4,6 @@ import java.util.Collection;
 
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 
-public interface ISocialModuleWithMinecraftCommands {
+public interface IMinecraftModule extends IModuleBase {
     Collection<IMinecraftCommand> getMinecraftCommands();
 }

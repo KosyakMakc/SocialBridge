@@ -13,7 +13,7 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.IT
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
-public class SocialModule implements ISocialModule {
+public class SocialModule implements IModule {
     private final LinkedList<ISocialCommand> socialCommands = new LinkedList<>();
     private final LinkedList<IMinecraftCommand> minecraftCommands = new LinkedList<>();
     private final LinkedList<ITranslationSource> translationSources = new LinkedList<>();

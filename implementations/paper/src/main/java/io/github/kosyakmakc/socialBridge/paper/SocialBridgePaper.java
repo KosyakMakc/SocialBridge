@@ -13,8 +13,8 @@ import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleWithMinecraftCommands;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -107,50 +107,48 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(ISocialModuleBase module) {
+    public CompletableFuture<Void> connectModule(IMinecraftModule module) {
         return CompletableFuture.runAsync(() -> {
             if (module.getLoader() instanceof JavaPlugin externalPlugin) {
-                if (module instanceof ISocialModuleWithMinecraftCommands moduleWithMinecraftCommands) {
-                    externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-                        var mcCommands = moduleWithMinecraftCommands.getMinecraftCommands();
-                        if (mcCommands.isEmpty()) {
-                            return;
+                externalPlugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                    var mcCommands = module.getMinecraftCommands();
+                    if (mcCommands.isEmpty()) {
+                        return;
+                    }
+                    
+                    var rootLiteral = Commands.literal(module.getName());
+                    
+                    for(var bridgeCommand : mcCommands) {
+                        var handler = HandleCommand(bridgeCommand);
+                        
+                        var cmd = Commands
+                        .literal(bridgeCommand.getLiteral())
+                        .executes(handler);
+                        
+                        var permission = bridgeCommand.getPermission();
+                        if (!permission.isEmpty()) {
+                            cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
                         }
                         
-                        var rootLiteral = Commands.literal(module.getName());
-                        
-                        for(var bridgeCommand : mcCommands) {
-                            var handler = HandleCommand(bridgeCommand);
+                        // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
+                        RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
+                        for (var argument : bridgeCommand.getArgumentDefinitions()) {
+                            var argumentNode = BuildArgumentNode(argument).executes(handler);
                             
-                            var cmd = Commands
-                            .literal(bridgeCommand.getLiteral())
-                            .executes(handler);
-                            
-                            var permission = bridgeCommand.getPermission();
-                            if (!permission.isEmpty()) {
-                                cmd.requires(sender -> sender.getSender().hasPermission(bridgeCommand.getPermission()));
+                            if (prev == null) {
+                                cmd.then(argumentNode);
+                            }
+                            else {
+                                prev.then(argumentNode);
                             }
                             
-                            // Registering singleton handler on all command phase, bridge-command will be can handle invalid calls and then notice user
-                            RequiredArgumentBuilder<CommandSourceStack, ?> prev = null;
-                            for (var argument : bridgeCommand.getArgumentDefinitions()) {
-                                var argumentNode = BuildArgumentNode(argument).executes(handler);
-                                
-                                if (prev == null) {
-                                    cmd.then(argumentNode);
-                                }
-                                else {
-                                    prev.then(argumentNode);
-                                }
-                                
-                                prev = argumentNode;
-                            }
-                            
-                            rootLiteral.then(cmd);
+                            prev = argumentNode;
                         }
-                        commands.registrar().register(rootLiteral.build());
-                    });
-                }
+                        
+                        rootLiteral.then(cmd);
+                    }
+                    commands.registrar().register(rootLiteral.build());
+                });
             }
             else {
                 getLogger().warning("Detected not supported module loader for '" + module.getName() + "' module.");
@@ -278,7 +276,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<String> get(ISocialModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
+    public CompletableFuture<String> get(IModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
         return get(module.getId(), parameter, defaultValue, transaction);
     }
 
@@ -301,7 +299,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Boolean> set(ISocialModuleBase module, String parameter, String value, ITransaction transaction) {
+    public CompletableFuture<Boolean> set(IModuleBase module, String parameter, String value, ITransaction transaction) {
         return set(module.getId(), parameter, value, transaction);
     }
 

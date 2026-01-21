@@ -7,7 +7,7 @@ import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
-public interface ISocialModuleBase {
+public interface IModuleBase {
     Version getCompabilityVersion();
     UUID getId();
     String getName();

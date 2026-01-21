@@ -1,7 +1,7 @@
 package io.github.kosyakmakc.socialBridge.SocialPlatforms;
 
 import io.github.kosyakmakc.socialBridge.ITransaction;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
@@ -14,8 +14,8 @@ public interface ISocialPlatform {
     UUID getId();
     Version getCompabilityVersion();
 
-    CompletableFuture<Void> connectModule(ISocialModuleBase module);
-    CompletableFuture<Void> disconnectModule(ISocialModuleBase module);
+    CompletableFuture<Void> connectModule(ISocialModule module);
+    CompletableFuture<Void> disconnectModule(ISocialModule module);
 
     CompletableFuture<Boolean> sendMessage(SocialUser telegramUser, String message, HashMap<String, String> placeholders);
     CompletableFuture<SocialUser> tryGetUser(Identifier id);

@@ -4,7 +4,7 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatExcept
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Permissions;
 
@@ -23,7 +23,7 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
     @SuppressWarnings("rawtypes")
     private final List<CommandArgument> argumentDefinition;
     private ISocialBridge bridge = null;
-    private ISocialModuleBase module = null;
+    private IModuleBase module = null;
     private Logger logger = null;
 
     public MinecraftCommandBase(String literal, MessageKey description) {
@@ -48,7 +48,7 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
     }
 
     @Override
-    public CompletableFuture<Void> enable(ISocialModuleBase module) {
+    public CompletableFuture<Void> enable(IModuleBase module) {
         this.module = module;
         bridge = module.getBridge();
         logger = Logger.getLogger(bridge.getLogger().getName() + '.' + module.getName() + '.' + getLiteral());
@@ -125,7 +125,7 @@ public abstract class MinecraftCommandBase implements IMinecraftCommand {
         return bridge;
     }
 
-    protected ISocialModuleBase getModule() {
+    protected IModuleBase getModule() {
         return module;
     }
 }

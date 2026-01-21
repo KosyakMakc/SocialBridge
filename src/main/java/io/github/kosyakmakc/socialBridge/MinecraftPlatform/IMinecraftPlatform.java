@@ -1,7 +1,7 @@
 package io.github.kosyakmakc.socialBridge.MinecraftPlatform;
 
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
 import java.io.IOException;
@@ -21,5 +21,5 @@ public interface IMinecraftPlatform extends IConfigurationService, IModuleLoader
 
     CompletableFuture<MinecraftUser> tryGetUser(UUID minecraftId);
 
-    CompletableFuture<Void> connectModule(ISocialModuleBase module);
+    CompletableFuture<Void> connectModule(IMinecraftModule module);
 }

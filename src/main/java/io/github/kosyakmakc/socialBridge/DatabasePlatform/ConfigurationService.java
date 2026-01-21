@@ -1,7 +1,7 @@
 package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRow;
-import io.github.kosyakmakc.socialBridge.Modules.ISocialModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
@@ -24,7 +24,7 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
-    public CompletableFuture<String> get(ISocialModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
+    public CompletableFuture<String> get(IModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
         return get(module.getId(), parameter, defaultValue, transaction);
     }
 
@@ -57,7 +57,7 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
-    public CompletableFuture<Boolean> set(ISocialModuleBase module, String parameter, String value, ITransaction transaction) {
+    public CompletableFuture<Boolean> set(IModuleBase module, String parameter, String value, ITransaction transaction) {
         return set(module.getId(), parameter, value, transaction);
     }
 
