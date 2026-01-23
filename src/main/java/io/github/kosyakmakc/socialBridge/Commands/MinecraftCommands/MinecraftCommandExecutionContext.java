@@ -6,7 +6,7 @@ public class MinecraftCommandExecutionContext {
     private final MinecraftUser sender;
     private final String message;
 
-    private MinecraftCommandExecutionContext(MinecraftUser sender, String message) {
+    public MinecraftCommandExecutionContext(MinecraftUser sender, String message) {
         this.sender = sender;
         this.message = message;
     }
