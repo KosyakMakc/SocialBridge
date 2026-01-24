@@ -2,7 +2,7 @@ package io.github.kosyakmakc.socialBridge.Commands.Arguments;
 
 import java.util.concurrent.CompletableFuture;
 
-public interface ICommandArgumentString {
+public interface ICommandArgumentSuggestions {
 
-    public CompletableFuture<String[]> getAutoCompletes();
+    public CompletableFuture<String[]> getSuggestions();
 }

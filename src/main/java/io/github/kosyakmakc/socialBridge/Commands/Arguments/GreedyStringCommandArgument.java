@@ -8,7 +8,7 @@ import java.io.StringWriter;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-class GreedyStringCommandArgument extends CommandArgument<String> implements ICommandArgumentString {
+class GreedyStringCommandArgument extends CommandArgument<String> implements ICommandArgumentSuggestions {
     private final String name;
     private final Supplier<CompletableFuture<String[]>> suggestionProvider;
 
@@ -28,7 +28,7 @@ class GreedyStringCommandArgument extends CommandArgument<String> implements ICo
     }
 
     @Override
-    public CompletableFuture<String[]> getAutoCompletes() {
+    public CompletableFuture<String[]> getSuggestions() {
         return suggestionProvider.get();
     }
 

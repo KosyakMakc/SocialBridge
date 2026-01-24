@@ -8,7 +8,7 @@ import io.github.kosyakmakc.socialBridge.Commands.ICommandWithArguments;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatException;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentNumeric;
-import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentString;
+import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentSuggestions;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
@@ -210,7 +210,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         return switch (dataType) {
             case Boolean -> Commands
                     .argument(commandName, BoolArgumentType.bool())
-                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentString) argument));
+                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentSuggestions) argument));
             case Integer -> Commands
                     .argument(commandName, IntegerArgumentType.integer(((ICommandArgumentNumeric<Integer>) argument).getMin(), ((ICommandArgumentNumeric<Integer>) argument).getMax()));
             case Long -> Commands
@@ -221,13 +221,13 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                     .argument(commandName, DoubleArgumentType.doubleArg(((ICommandArgumentNumeric<Double>) argument).getMin(), ((ICommandArgumentNumeric<Integer>) argument).getMax()));
             case Word -> Commands
                     .argument(commandName, StringArgumentType.word())
-                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentString) argument));
+                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentSuggestions) argument));
             case String -> Commands
                     .argument(commandName, StringArgumentType.string())
-                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentString) argument));
+                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentSuggestions) argument));
             case GreedyString -> Commands
                     .argument(commandName, StringArgumentType.greedyString())
-                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentString) argument));
+                    .suggests(new BridgeCommandSuggestionProvider((ICommandArgumentSuggestions) argument));
         };
     }
 

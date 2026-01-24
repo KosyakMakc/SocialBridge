@@ -8,7 +8,7 @@ import java.io.StringWriter;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-class StringCommandArgument extends CommandArgument<String> implements ICommandArgumentString {
+class StringCommandArgument extends CommandArgument<String> implements ICommandArgumentSuggestions {
     private static final char quoteChar = '"';
     private static final char escapeChar = '\\';
     private final String name;
@@ -30,7 +30,7 @@ class StringCommandArgument extends CommandArgument<String> implements ICommandA
     }
 
     @Override
-    public CompletableFuture<String[]> getAutoCompletes() {
+    public CompletableFuture<String[]> getSuggestions() {
         return suggestionProvider.get();
     }
 

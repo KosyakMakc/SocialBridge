@@ -7,7 +7,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.concurrent.CompletableFuture;
 
-class BooleanCommandArgument extends CommandArgument<Boolean> implements ICommandArgumentString {
+class BooleanCommandArgument extends CommandArgument<Boolean> implements ICommandArgumentSuggestions {
     private final String name;
 
     public BooleanCommandArgument(String name) {
@@ -25,7 +25,7 @@ class BooleanCommandArgument extends CommandArgument<Boolean> implements IComman
     }
 
     @Override
-    public CompletableFuture<String[]> getAutoCompletes() {
+    public CompletableFuture<String[]> getSuggestions() {
         return CompletableFuture.completedFuture(new String[] { "true", "false" });
     }
 
