@@ -314,6 +314,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                 }
 
                 moduleSection.set(parameter, value);
+                this.saveConfig();
 
                 getLogger().info("plugin configuration change: " + parameter + "=" + value);
                 return true;
