@@ -195,6 +195,9 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                         getLogger().warning(msgTemplate));
                 }
             }
+            catch (Exception err) {
+                err.printStackTrace();
+            }
             return SINGLE_SUCCESS;
         };
     }
