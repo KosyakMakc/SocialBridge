@@ -2,20 +2,18 @@ package io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands;
 
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 
-public class MinecraftCommandExecutionContext {
+public abstract class MinecraftCommandExecutionContext {
     private final MinecraftUser sender;
-    private final String message;
 
-    public MinecraftCommandExecutionContext(MinecraftUser sender, String message) {
+    public MinecraftCommandExecutionContext(MinecraftUser sender) {
         this.sender = sender;
-        this.message = message;
     }
 
     public MinecraftUser getSender() {
         return sender;
     }
 
-    public String getMessage() {
-        return message;
-    }
+    public abstract String getMessage();
+
+    public abstract String getFullMessage();
 }

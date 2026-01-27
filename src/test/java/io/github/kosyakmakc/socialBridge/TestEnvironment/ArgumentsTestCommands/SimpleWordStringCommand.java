@@ -10,10 +10,12 @@ import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandEx
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
 public class SimpleWordStringCommand extends SocialCommandBase {
+    public static final String NAME = "SimpleWordTest";
+
     private String answer;
     
     public SimpleWordStringCommand() {
-        super("SimpleWordTest", MessageKey.EMPTY, List.of(CommandArgument.ofWord("single argument")));
+        super(NAME, MessageKey.EMPTY, List.of(CommandArgument.ofWord("single argument")));
     }
     
     public void prepareAnswer(String answer) {

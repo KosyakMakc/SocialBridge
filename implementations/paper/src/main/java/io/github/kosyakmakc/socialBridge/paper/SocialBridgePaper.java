@@ -10,7 +10,6 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentNumeric;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentSuggestions;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
-import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
@@ -30,7 +29,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -45,9 +43,6 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPlatform {
     public static final String PLATFORM_NAME = "paper";
     public static final UUID PLATFORM_ID = UUID.fromString("2a461647-2958-4e61-9429-12f0bb5c8d3c");
-
-    private static final CommandArgument<String> systemWordArgument = CommandArgument.ofWord("/{pluginSuffix} {commandLiteral} [arguments, ...]");
-    private static final CommandArgument<String> systemGreedyStringArgument = CommandArgument.ofGreedyString("[arguments, ...]");
 
     private final Version socialBridgVersion;
     private final ISocialBridge socialBridge;
@@ -174,18 +169,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
             // TODO what about another CommandSender?
 
             try {
-                var message = ctx.getInput();
-                var argsReader = new StringReader(message);
-
-                // pumping "/{moduleSuffix}" in reader, but result is ignored - Paper performs command routing.
-                systemWordArgument.getValue(argsReader);
-
-                // pumping {commandLiteral} in reader, but result is ignored - Paper performs command routing.
-                systemWordArgument.getValue(argsReader);
-
-                var argumentsDefinition = systemGreedyStringArgument.getValue(argsReader);
-
-                var commandContext = new MinecraftCommandExecutionContext(mcPlatformUser, argumentsDefinition);
+                var commandContext = new PaperMinecraftCommandExecutionContext(mcPlatformUser, ctx.getInput());
                 bridgeCommand.handle(commandContext);
             } catch (ArgumentFormatException e) {
                 if (mcPlatformUser != null) {

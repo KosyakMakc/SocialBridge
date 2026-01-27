@@ -10,10 +10,12 @@ import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandEx
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
 public class SimpleBooleanCommand extends SocialCommandBase {
+    public static final String NAME = "BooleanTest";
+
     private boolean answer;
 
     public SimpleBooleanCommand() {
-        super("BooleanTest", MessageKey.EMPTY, List.of(CommandArgument.ofBoolean("single argument")));
+        super(NAME, MessageKey.EMPTY, List.of(CommandArgument.ofBoolean("single argument")));
     }
 
     public void prepareAnswer(boolean answer) {

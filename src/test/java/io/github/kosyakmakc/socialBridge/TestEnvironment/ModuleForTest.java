@@ -15,6 +15,7 @@ import io.github.kosyakmakc.socialBridge.Modules.IModule;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
 public class ModuleForTest implements IModule, AutoCloseable {
+    public static final String DEFAULT_NAME = "DefaultEmptyName";
     private UUID moduleId = UUID.randomUUID();
     private Version version = HeadlessMinecraftPlatform.VERSION;
 
@@ -26,7 +27,7 @@ public class ModuleForTest implements IModule, AutoCloseable {
     @SuppressWarnings("rawtypes")
     private final HashMap<Class, ITranslationSource> translations = new HashMap<>();
     private ISocialBridge bridge;
-    private String name = "DefaultEmptyName";
+    private String name = DEFAULT_NAME;
 
     public ModuleForTest() {
         this.loader = SocialBridge.INSTANCE.getMinecraftPlatform();

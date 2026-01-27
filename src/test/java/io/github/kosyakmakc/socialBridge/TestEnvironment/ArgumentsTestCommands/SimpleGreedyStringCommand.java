@@ -10,12 +10,14 @@ import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandEx
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
 public class SimpleGreedyStringCommand extends SocialCommandBase {
+    public static final String NAME = "GreedyStringTest";
+
     private String answer;
-    
+
     public SimpleGreedyStringCommand() {
-        super("GreedyStringTest", MessageKey.EMPTY, List.of(CommandArgument.ofGreedyString("single argument")));
+        super(NAME, MessageKey.EMPTY, List.of(CommandArgument.ofGreedyString("single argument")));
     }
-    
+
     public void prepareAnswer(String answer) {
         this.answer = answer;
     }

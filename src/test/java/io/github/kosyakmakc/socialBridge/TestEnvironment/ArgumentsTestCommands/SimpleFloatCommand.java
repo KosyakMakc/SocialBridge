@@ -10,12 +10,14 @@ import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandEx
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
 public class SimpleFloatCommand extends SocialCommandBase {
+    public static final String NAME = "FloatTest";
+
     private float answer;
-    
+
     public SimpleFloatCommand() {
-        super("FloatTest", MessageKey.EMPTY, List.of(CommandArgument.ofFloat("single argument")));
+        super(NAME, MessageKey.EMPTY, List.of(CommandArgument.ofFloat("single argument")));
     }
-    
+
     public void prepareAnswer(float answer) {
         this.answer = answer;
     }

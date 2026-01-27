@@ -80,7 +80,7 @@ public abstract class SocialCommandBase implements ISocialCommand, ICommandWithA
             return;
         }
 
-        var message = context.getMessage().getStringMessage();
+        var message = context.getMessage();
         var argsReader = new StringReader(message);
 
         var arguments = new LinkedList<>();

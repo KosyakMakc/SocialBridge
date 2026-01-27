@@ -1,10 +1,10 @@
 package io.github.kosyakmakc.socialBridge.Commands;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatException;
-import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.TestEnvironment.ModuleForTest;
 import io.github.kosyakmakc.socialBridge.TestEnvironment.HeadlessMinecraftPlatform;
+import io.github.kosyakmakc.socialBridge.TestEnvironment.HeadlessSocialCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.TestEnvironment.HeadlessSocialMessage;
 import io.github.kosyakmakc.socialBridge.TestEnvironment.HeadlessSocialUser;
 import io.github.kosyakmakc.socialBridge.TestEnvironment.ArgumentsTestCommands.SimpleWordStringCommand;
@@ -36,6 +36,7 @@ public class WordArgumentsTest {
         "0xff, 0xff, false",
     })
     void simpleIntegerCheck(String answer, String raw, boolean isError) throws SQLException, IOException {
+        raw = '/' + ModuleForTest.DEFAULT_NAME + '_' + SimpleWordStringCommand.NAME + ' ' + raw;
         HeadlessMinecraftPlatform.Init();
         try (var module = new ModuleForTest()) {
             try {
@@ -44,7 +45,7 @@ public class WordArgumentsTest {
                 SocialBridge.INSTANCE.connectModule(module);
                 
                 command.prepareAnswer(answer);
-                command.handle(new SocialCommandExecutionContext(new HeadlessSocialMessage(HeadlessSocialUser.Alex, raw)));
+                command.handle(new HeadlessSocialCommandExecutionContext(new HeadlessSocialMessage(HeadlessSocialUser.Alex, raw)));
                 
                 if (isError) {
                     Assertions.fail("MUST failed | " + answer + " | " + raw + " | " + isError);
