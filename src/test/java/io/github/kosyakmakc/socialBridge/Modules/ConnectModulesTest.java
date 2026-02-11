@@ -21,10 +21,10 @@ import io.github.kosyakmakc.socialBridge.Utils.Version;
 public class ConnectModulesTest {
     @ParameterizedTest
     @CsvSource({
-        // Environment with SocialBridge(0.9.3)
-        "0.9.0", // module require just base version
-        "0.9.1", // module require a little bug-fix or new functionality
-        "0.9.3", // module require a little bug-fix or new functionality
+        // Environment with SocialBridge(0.10.3)
+        "0.10.0", // module require just base version
+        "0.10.1", // module require a little bug-fix or new functionality
+        "0.10.3", // module require a little bug-fix or new functionality
     })
     void checkModuleVersionCompability(String moduleVersion) throws SQLException, IOException {
         HeadlessMinecraftPlatform.Init();
@@ -44,7 +44,7 @@ public class ConnectModulesTest {
     
     @ParameterizedTest
     @CsvSource({
-        // Environment with SocialBridge(0.9.3)
+        // Environment with SocialBridge(0.10.3)
         "0.99.0", // module have new breaking-changes api, DON'T CONNECT
         "0.99.1", // module have new breaking-changes api, DON'T CONNECT
         "0.99.99", // module have new breaking-changes api, DON'T CONNECT
@@ -52,14 +52,14 @@ public class ConnectModulesTest {
         "0.2.1", // module outdated to SocialBridge breaking-change api, DON'T CONNECT
         "0.2.99", // module outdated to SocialBridge breaking-change api, DON'T CONNECT
 
-        "0.9.4", // module requires not existed bug-fix or new functionality, DON'T CONNECT
-        "0.9.5", // module requires not existed bug-fix or new functionality, DON'T CONNECT
-        "0.9.99", // module requires not existed bug-fix or new functionality, DON'T CONNECT
+        "0.10.4", // module requires not existed bug-fix or new functionality, DON'T CONNECT
+        "0.10.5", // module requires not existed bug-fix or new functionality, DON'T CONNECT
+        "0.10.99", // module requires not existed bug-fix or new functionality, DON'T CONNECT
 
         "1.0.0", // module have new breaking-changes api, DON'T CONNECT
         "1.0.1", // module have new breaking-changes api, DON'T CONNECT
         "1.1.0", // module have new breaking-changes api, DON'T CONNECT
-        "1.1.1", // module have new breaking-changes api, DON'T CONNECT
+        "1.1.1", // modwule have new breaking-changes api, DON'T CONNECT
         "1.2.0", // module have new breaking-changes api, DON'T CONNECT
         "1.2.1", // module have new breaking-changes api, DON'T CONNECT
         "1.3.0", // module have new breaking-changes api, DON'T CONNECT

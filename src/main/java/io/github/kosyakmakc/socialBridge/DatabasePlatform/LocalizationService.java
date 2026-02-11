@@ -2,7 +2,6 @@ package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.Localization;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Modules.ITranslationsModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.ILocalizationService;
@@ -33,27 +32,27 @@ public class LocalizationService implements ILocalizationService {
     }
 
     @Override
-    public CompletableFuture<String> getMessage(IModuleBase module, String locale, MessageKey key, ITransaction transaction) {
-        var localization = searchByCache(module, key.key(), key);
+    public CompletableFuture<String> getMessage(String locale, MessageKey key, ITransaction transaction) {
+        var localization = searchByCache(locale, key);
         if (localization != null) {
             return CompletableFuture.completedFuture(localization);
         }
 
-        return getMessageFromStorage(module, locale, key, transaction);
+        return getMessageFromStorage(locale, key, transaction);
     }
 
-    private CompletableFuture<String> getMessageFromStorage(IModuleBase module, String locale, MessageKey key, ITransaction transaction) {
+    private CompletableFuture<String> getMessageFromStorage(String locale, MessageKey key, ITransaction transaction) {
         return transaction == null
-            ? bridge.doTransaction(transaction2 -> getMessageFromDatabase(module, locale, key, transaction2))
-            : getMessageFromDatabase(module, locale, key, transaction);
+            ? bridge.doTransaction(transaction2 -> getMessageFromDatabase(locale, key, transaction2))
+            : getMessageFromDatabase(locale, key, transaction);
     }
 
-    private CompletableFuture<String> getMessageFromDatabase(IModuleBase module, String locale, MessageKey key, ITransaction transaction) {
+    private CompletableFuture<String> getMessageFromDatabase(String locale, MessageKey key, ITransaction transaction) {
             List<Localization> records;
             try {
                 records = transaction.getDatabaseContext().localizations.queryBuilder()
                         .where()
-                            .eq(Localization.MODULE_FIELD_NAME, module.getId())
+                            .eq(Localization.MODULE_FIELD_NAME, key.moduleId())
                             .and()
                             .eq(Localization.LANGUAGE_FIELD_NAME, locale)
                             .and()
@@ -74,14 +73,14 @@ public class LocalizationService implements ILocalizationService {
             return task.thenCompose(x -> {
                 if (x == null) {
                     if (!locale.equalsIgnoreCase(defaultLocale)) {
-                        return getMessage(module, defaultLocale, key, transaction);
+                        return getMessage(defaultLocale, key, transaction);
                     }
                 }
                 return CompletableFuture.completedStage(x);
             })
             .thenApply(x -> {
                 var localization2 = x != null ? x : key.key();
-                appendToCache(module, locale, key, localization2);
+                appendToCache(locale, key, localization2);
                 return localization2;
             })
             .exceptionally(error -> {
@@ -90,11 +89,11 @@ public class LocalizationService implements ILocalizationService {
             });
     }
 
-    private String searchByCache(IModuleBase module, String locale, MessageKey key) {
-        var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
+    private String searchByCache(String locale, MessageKey key) {
+        var moduleCache = inMemoryCache.getOrDefault(key.moduleId(), null);
         if (moduleCache == null) {
             moduleCache = new ConcurrentHashMap<>();
-            inMemoryCache.put(module.getId(), moduleCache);
+            inMemoryCache.put(key.moduleId(), moduleCache);
         }
         var languageCache = moduleCache.getOrDefault(locale, null);
         if (languageCache == null) {
@@ -110,11 +109,11 @@ public class LocalizationService implements ILocalizationService {
         }
     }
 
-    private void appendToCache(IModuleBase module, String locale, MessageKey key,  String localization) {
-        var moduleCache = inMemoryCache.getOrDefault(module.getId(), null);
+    private void appendToCache(String locale, MessageKey key,  String localization) {
+        var moduleCache = inMemoryCache.getOrDefault(key.moduleId(), null);
         if (moduleCache == null) {
             moduleCache = new ConcurrentHashMap<>();
-            inMemoryCache.put(module.getId(), moduleCache);
+            inMemoryCache.put(key.moduleId(), moduleCache);
         }
         var languageCache = moduleCache.getOrDefault(locale, null);
         if (languageCache == null) {
@@ -128,22 +127,24 @@ public class LocalizationService implements ILocalizationService {
     }
 
     @Override
-    public CompletableFuture<Boolean> setMessage(IModuleBase module, String locale, MessageKey key, String localization, ITransaction transaction) {
+    public CompletableFuture<Boolean> setMessage(String locale, MessageKey key, String localization, ITransaction transaction) {
         return transaction == null
-            ? bridge.doTransaction(transaction2 -> setMessageToDatabase(module, locale, key, localization, transaction2))
-            : setMessageToDatabase(module, locale, key, localization, transaction);
+            ? bridge.doTransaction(transaction2 -> setMessageToDatabase(locale, key, localization, transaction2))
+            : setMessageToDatabase(locale, key, localization, transaction);
     }
 
-    private CompletableFuture<Boolean> setMessageToDatabase(IModuleBase module, String locale, MessageKey key, String localization, ITransaction transaction) {
-        var moduleId = module.getId();
-        logger.info("update localization for module '" + module.getName() + "' (lang=" + locale + " key=" + key.key() + ")");
+    private CompletableFuture<Boolean> setMessageToDatabase(String locale, MessageKey key, String localization, ITransaction transaction) {
+        var moduleId = key.moduleId();
+        var module = bridge.getModule(moduleId);
+        var moduleName = module != null ? module.getName() : moduleId;
+        logger.info("update localization for module '" + moduleName + "' (lang=" + locale + " key=" + key.key() + ")");
 
         try {
             var databaseContext = transaction.getDatabaseContext();
 
             var records = databaseContext.localizations.queryBuilder()
                 .where()
-                    .eq(Localization.MODULE_FIELD_NAME, module.getId())
+                    .eq(Localization.MODULE_FIELD_NAME, moduleId)
                     .and()
                     .eq(Localization.LANGUAGE_FIELD_NAME, locale)
                     .and()
@@ -159,13 +160,13 @@ public class LocalizationService implements ILocalizationService {
                         localization
                     )
                 );
-                appendToCache(module, locale, key, localization);
+                appendToCache(locale, key, localization);
             }
             else {
                 var localizationRecord = records.getFirst();
                 localizationRecord.setLocalization(localization);
                 databaseContext.localizations.update(localizationRecord);
-                appendToCache(module, locale, key, localization);
+                appendToCache(locale, key, localization);
             }
 
             return CompletableFuture.completedFuture(true);

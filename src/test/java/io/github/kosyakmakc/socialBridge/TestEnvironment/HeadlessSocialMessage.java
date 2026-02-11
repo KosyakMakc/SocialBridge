@@ -8,9 +8,11 @@ import java.util.logging.Logger;
 
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialAttachment;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
+import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.IdentifierType;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 
 public class HeadlessSocialMessage implements ISocialMessage {
     private static int HeadlessGlobalCounter = 1;
@@ -38,8 +40,8 @@ public class HeadlessSocialMessage implements ISocialMessage {
     }
 
     @Override
-    public SocialUser getAuthor() {
-        return sender;
+    public CompletableFuture<SocialUser> getAuthor() {
+        return CompletableFuture.completedFuture(sender);
     }
 
     @Override
@@ -53,9 +55,24 @@ public class HeadlessSocialMessage implements ISocialMessage {
     }
 
     @Override
+    public ISocialPlatform getSocialPlatform() {
+        return sender.getPlatform();
+    }
+
+    @Override
     public CompletableFuture<Boolean> sendReply(String message, HashMap<String, String> placeholders) {
         // TO DO build template
-        Logger.getGlobal().info("[social reply to: " + getStringMessage() + " (" + getAuthor().getName() + ")] " + message);
+        Logger.getGlobal().info("[social reply to: " + getStringMessage() + " (" + sender.getName() + ")] " + message);
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendReply(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+        return sender
+            .getPlatform()
+            .getBridge()
+            .getLocalizationService()
+            .getMessage(locale, messageKey, null)
+            .thenCompose(messageTemplate -> sendReply(messageTemplate, placeholders));
     }
 }

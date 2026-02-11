@@ -9,9 +9,10 @@ import org.bukkit.Bukkit;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 
+import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
-import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -20,16 +21,16 @@ import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import net.luckperms.api.LuckPerms;
 
 public class OfflineBukkitMinecraftUser extends MinecraftUser {
-    // private final IMinecraftPlatform platform;
+    private final ISocialBridge socialBridge;
     private final Logger logger;
 
     private final UUID playerId;
     private final String playerName;
 
-    public OfflineBukkitMinecraftUser(PlayerProfile player, IMinecraftPlatform platform) {
+    public OfflineBukkitMinecraftUser(PlayerProfile player, ISocialBridge socialBridge) {
         super();
-        // this.platform = platform;
-        this.logger = Logger.getLogger(platform.getLogger().getName() + '.' + BukkitMinecraftUser.class.getSimpleName());
+        this.socialBridge = socialBridge;
+        this.logger = Logger.getLogger(socialBridge.getLogger().getName() + '.' + BukkitMinecraftUser.class.getSimpleName());
 
         this.playerId = player.getId();
         this.playerName = player.getName();
@@ -63,7 +64,7 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
-    public void sendMessage(String message, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
         var builder = MiniMessage.builder()
                                  .tags(TagResolver.builder()
                                                   .resolver(StandardTags.defaults())
@@ -75,5 +76,15 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
 
         var builtMessage = builder.build().deserialize(message);
         logger.info("message to '" + this.getName() + "' - " + MiniMessage.miniMessage().serialize(builtMessage));
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+        return socialBridge
+            .getLocalizationService()
+            .getMessage(locale, messageKey, null)
+            .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
     }
 }

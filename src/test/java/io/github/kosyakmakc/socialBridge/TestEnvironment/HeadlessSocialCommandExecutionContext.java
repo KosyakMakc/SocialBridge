@@ -6,6 +6,7 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatExcept
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
+import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 
 public class HeadlessSocialCommandExecutionContext extends SocialCommandExecutionContext {
     private static final CommandArgument<String> systemWordArgument = CommandArgument.ofWord("/{pluginSuffix_commandLiteral} [arguments, ...]");
@@ -37,6 +38,11 @@ public class HeadlessSocialCommandExecutionContext extends SocialCommandExecutio
     @Override
     public String getMessage() {
         return commandMessage;
+    }
+
+    @Override
+    public ISocialPlatform getSocialPlatform() {
+        return getSocialMessage().getSocialPlatform();
     }
 
 }

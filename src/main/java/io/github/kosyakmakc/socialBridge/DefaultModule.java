@@ -11,7 +11,14 @@ public class DefaultModule extends SocialModule {
     public static final String MODULE_NAME = "socialbridge";
 
     public DefaultModule(IMinecraftPlatform loader) {
-        super(loader, loader.getSocialBridgeVersion(), MODULE_ID, MODULE_NAME);
+        super(
+            loader,
+            loader.getSocialBridgeVersion(),
+            loader.getSocialBridgeVersion(),
+            MODULE_ID,
+            MODULE_NAME
+        );
+
         addTranslationSource(new English());
         addTranslationSource(new Russian());
     }

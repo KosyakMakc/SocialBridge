@@ -1,7 +1,8 @@
 package io.github.kosyakmakc.socialBridge.paper;
 
-import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
+import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -15,14 +16,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 public class BukkitMinecraftUser extends MinecraftUser {
-    // private final IMinecraftPlatform platform;
+    private final ISocialBridge socialBridge;
     private final Logger logger;
     private final Player player;
 
-    public BukkitMinecraftUser(Player player, IMinecraftPlatform platform) {
+    public BukkitMinecraftUser(Player player, ISocialBridge socialBridge) {
         super();
-        // this.platform = platform;
-        this.logger = Logger.getLogger(platform.getLogger().getName() + '.' + BukkitMinecraftUser.class.getSimpleName());
+        this.socialBridge = socialBridge;
+        this.logger = Logger.getLogger(socialBridge.getLogger().getName() + '.' + BukkitMinecraftUser.class.getSimpleName());
         this.player = player;
     }
 
@@ -45,7 +46,7 @@ public class BukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
-    public void sendMessage(String message, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
         var builder = MiniMessage.builder()
                                  .tags(TagResolver.builder()
                                                   .resolver(StandardTags.defaults())
@@ -58,5 +59,15 @@ public class BukkitMinecraftUser extends MinecraftUser {
         var builtMessage = builder.build().deserialize(message);
         player.sendMessage(builtMessage);
         logger.info("message to '" + this.getName() + "' - " + MiniMessage.miniMessage().serialize(builtMessage));
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+        return socialBridge
+            .getLocalizationService()
+            .getMessage(locale, messageKey, null)
+            .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
     }
 }
