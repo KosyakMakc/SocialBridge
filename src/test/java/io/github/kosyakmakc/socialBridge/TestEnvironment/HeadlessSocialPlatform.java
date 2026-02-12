@@ -62,10 +62,10 @@ public class HeadlessSocialPlatform implements ISocialPlatform {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return getBridge()
             .getLocalizationService()
-            .getMessage(locale, messageKey, null)
+            .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendMessage(channelId, messageTemplate, placeholders));
     }
 

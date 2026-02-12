@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import com.destroystokyo.paper.profile.PlayerProfile;
 
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
@@ -81,10 +82,10 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return socialBridge
             .getLocalizationService()
-            .getMessage(locale, messageKey, null)
+            .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
     }
 }

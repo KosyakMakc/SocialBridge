@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialAttachment;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
@@ -67,12 +68,12 @@ public class HeadlessSocialMessage implements ISocialMessage {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendReply(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendReply(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return sender
             .getPlatform()
             .getBridge()
             .getLocalizationService()
-            .getMessage(locale, messageKey, null)
+            .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendReply(messageTemplate, placeholders));
     }
 }

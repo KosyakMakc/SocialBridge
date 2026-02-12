@@ -134,8 +134,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale,
-            HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'sendBroadcaseMessage'");
     }

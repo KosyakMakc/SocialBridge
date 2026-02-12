@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.IdentifierType;
@@ -50,11 +51,11 @@ public class HeadlessSocialUser extends SocialUser {
     }
 
     @Override
-    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return getPlatform()
             .getBridge()
             .getLocalizationService()
-            .getMessage(locale, messageKey, null)
+            .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
     }
 

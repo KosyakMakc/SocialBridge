@@ -19,7 +19,7 @@ public interface ISocialPlatform {
     CompletableFuture<Void> disconnectModule(ISocialModule module);
 
     CompletableFuture<Boolean> sendMessage(Identifier channelId, String message, HashMap<String, String> placeholders);
-    CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders);
+    CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
 
     CompletableFuture<SocialUser> tryGetUser(Identifier id, ITransaction transaction);
 
