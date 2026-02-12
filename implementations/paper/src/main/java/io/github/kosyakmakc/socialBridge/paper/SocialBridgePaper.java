@@ -264,7 +264,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
                 return fakeProfile
                        .update()
-                       .thenApply(profile -> fakeProfile == profile ? null : new OfflineBukkitMinecraftUser(profile, socialBridge));
+                       .thenApply(profile -> fakeProfile == profile || profile.getName().isEmpty() ? null : new OfflineBukkitMinecraftUser(profile, socialBridge));
             }
             else {
                 return CompletableFuture.completedStage(bukkitUser);
