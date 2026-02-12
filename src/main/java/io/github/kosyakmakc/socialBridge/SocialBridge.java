@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +22,7 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleDepend;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
 import io.github.kosyakmakc.socialBridge.Modules.ITranslationsModule;
@@ -328,6 +330,19 @@ public class SocialBridge implements ISocialBridge {
                     if (!matcher5.find()) {
                         throw new RuntimeException("Invalid translation key name, please use [a-zA-Z_] symbols");
                     }
+                }
+            }
+        }
+
+        if (module instanceof IModuleDepend moduleWithDependancies) {
+            for (Entry<UUID, Version> dependancyEntry : moduleWithDependancies.getDependencies()) {
+                var requiredModule = getModule(dependancyEntry.getKey());
+                if (requiredModule == null) {
+                    throw new RuntimeException("Required dependancy module with uuid='" + dependancyEntry.getKey() + "' missed");
+                }
+
+                if (!requiredModule.getModuleVersion().isCompatible(dependancyEntry.getValue())) {
+                    throw new RuntimeException("Required dependancy module with name '" + requiredModule.getName() + "' (" + dependancyEntry.getValue() + ") are incompatible with existed '" + requiredModule.getName() + "' (" + requiredModule.getModuleVersion() + ")");
                 }
             }
         }

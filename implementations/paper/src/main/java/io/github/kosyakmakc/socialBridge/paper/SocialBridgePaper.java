@@ -19,10 +19,16 @@ import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -165,7 +171,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         return ctx -> {
             var sender = ctx.getSource().getSender();
 
-            var mcPlatformUser = sender instanceof Player player ? new BukkitMinecraftUser(player, this) : null;
+            var mcPlatformUser = sender instanceof Player player ? new BukkitMinecraftUser(player, socialBridge) : null;
             // TODO what about another CommandSender?
 
             try {
@@ -174,7 +180,6 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
             } catch (ArgumentFormatException e) {
                 if (mcPlatformUser != null) {
                     socialBridge.getLocalizationService().getMessage(
-                        socialBridge.getModule(DefaultModule.class),
                         mcPlatformUser.getLocale(),
                         e.getMessageKey(),
                         null
@@ -184,7 +189,6 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                 }
                 else {
                     socialBridge.getLocalizationService().getMessage(
-                        socialBridge.getModule(DefaultModule.class),
                         LocalizationService.defaultLocale,
                         e.getMessageKey(),
                         null
@@ -246,7 +250,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         return CompletableFuture.supplyAsync(() -> {
             var onlinePlayer = getServer().getPlayer(minecraftId);
             if (onlinePlayer != null) {
-                return new BukkitMinecraftUser(onlinePlayer, this);
+                return new BukkitMinecraftUser(onlinePlayer, socialBridge);
             }
             else {
                 return null;
@@ -260,12 +264,18 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
                 return fakeProfile
                        .update()
-                       .thenApply(profile -> fakeProfile == profile ? null : new OfflineBukkitMinecraftUser(profile, this));
+                       .thenApply(profile -> fakeProfile == profile || profile.getName().isEmpty() ? null : new OfflineBukkitMinecraftUser(profile, socialBridge));
             }
             else {
                 return CompletableFuture.completedStage(bukkitUser);
             }
         });
+    }
+
+    @Override
+    public CompletableFuture<MinecraftUser> tryGetUser(String playerName) {
+        var playerId = getServer().getPlayerUniqueId(playerName);
+        return tryGetUser(playerId);
     }
 
     @Override
@@ -334,8 +344,32 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         var users = getServer()
                     .getOnlinePlayers()
                     .stream()
-                    .map(player -> (MinecraftUser) new BukkitMinecraftUser(player, this))
+                    .map(player -> (MinecraftUser) new BukkitMinecraftUser(player, socialBridge))
                     .toList();
         return CompletableFuture.completedFuture(users);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendBroadcaseMessage(String message, HashMap<String, String> placeholders) {
+        var builder = MiniMessage.builder()
+                                 .tags(TagResolver.builder()
+                                                  .resolver(StandardTags.defaults())
+                                                  .build());
+
+        for (var placeholderKey : placeholders.keySet()) {
+            builder.editTags(x -> x.resolver(Placeholder.component(placeholderKey, Component.text(placeholders.get(placeholderKey)))));
+        }
+
+        var builtMessage = builder.build().deserialize(message);
+        getServer().broadcast(builtMessage);
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+        return socialBridge
+            .getLocalizationService()
+            .getMessage(locale, messageKey, null)
+            .thenCompose(messageTemplate -> sendBroadcaseMessage(messageTemplate, placeholders));
     }
 }

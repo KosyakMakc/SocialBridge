@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.ITransaction;
@@ -12,6 +13,7 @@ import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
 public class HeadlessSocialPlatform implements ISocialPlatform {
@@ -22,7 +24,7 @@ public class HeadlessSocialPlatform implements ISocialPlatform {
     private static final HashMap<Integer, HeadlessSocialUser> USER_DATABASE = new HashMap<>();
 
     private LinkedList<ISocialModule> connectedModules = new LinkedList<>();
-    // private ISocialBridge socialBridge;
+    private ISocialBridge socialBridge;
 
     @Override
     public String getPlatformName() {
@@ -54,8 +56,17 @@ public class HeadlessSocialPlatform implements ISocialPlatform {
     @Override
     public CompletableFuture<Boolean> sendMessage(Identifier channelId, String message, HashMap<String, String> placeholders) {
         // TO DO build template
-        Logger.getGlobal().info("[social message to channel: " + channelId.value().toString() + "] " + message);
+        var params = placeholders.entrySet().stream().map(entry -> entry.getKey() + '=' + entry.getValue()).collect(Collectors.joining("; "));
+        Logger.getGlobal().info("[social message to channel: " + channelId.value().toString() + "] " + message + "(" + params + ")");
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+        return getBridge()
+            .getLocalizationService()
+            .getMessage(locale, messageKey, null)
+            .thenCompose(messageTemplate -> sendMessage(channelId, messageTemplate, placeholders));
     }
 
     @Override
@@ -66,13 +77,18 @@ public class HeadlessSocialPlatform implements ISocialPlatform {
 
     @Override
     public CompletableFuture<Boolean> enable(ISocialBridge socialBridge) {
-        // this.socialBridge = socialBridge;
+        this.socialBridge = socialBridge;
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Void> disable() {
-        // this.socialBridge = null;
+        this.socialBridge = null;
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public ISocialBridge getBridge() {
+        return socialBridge;
     }
 }

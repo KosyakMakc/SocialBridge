@@ -3,6 +3,7 @@ package io.github.kosyakmakc.socialBridge.SocialPlatforms;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.Modules.ISocialModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
 import java.util.HashMap;
@@ -18,9 +19,12 @@ public interface ISocialPlatform {
     CompletableFuture<Void> disconnectModule(ISocialModule module);
 
     CompletableFuture<Boolean> sendMessage(Identifier channelId, String message, HashMap<String, String> placeholders);
+    CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey messageKey, String locale, HashMap<String, String> placeholders);
 
     CompletableFuture<SocialUser> tryGetUser(Identifier id, ITransaction transaction);
 
     CompletableFuture<Boolean> enable(ISocialBridge socialBridge);
     CompletableFuture<Void> disable();
+
+    ISocialBridge getBridge();
 }

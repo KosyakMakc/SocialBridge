@@ -9,6 +9,8 @@ import io.github.kosyakmakc.socialBridge.Utils.Version;
 
 public interface IModuleBase {
     Version getCompabilityVersion();
+
+    Version getModuleVersion();
     UUID getId();
     String getName();
 

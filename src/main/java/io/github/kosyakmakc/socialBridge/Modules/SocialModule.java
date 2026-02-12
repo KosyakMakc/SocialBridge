@@ -1,8 +1,10 @@
 package io.github.kosyakmakc.socialBridge.Modules;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,16 +19,20 @@ public class SocialModule implements IModule {
     private final LinkedList<ISocialCommand> socialCommands = new LinkedList<>();
     private final LinkedList<IMinecraftCommand> minecraftCommands = new LinkedList<>();
     private final LinkedList<ITranslationSource> translationSources = new LinkedList<>();
+    private final LinkedList<Entry<UUID, Version>> dependencies = new LinkedList<>();
 
     private Version compabilityVersion;
+
+    private Version moduleVersion;
     private UUID moduleId;
     private String moduleName;
     private IModuleLoader moduleLoader;
 
     private ISocialBridge bridge;
 
-    public SocialModule(IModuleLoader moduleLoader, Version compabilityVersion, UUID moduleId, String moduleName) {
+    public SocialModule(IModuleLoader moduleLoader, Version compabilityVersion, Version moduleVersion, UUID moduleId, String moduleName) {
         this.compabilityVersion = compabilityVersion;
+        this.moduleVersion = moduleVersion;
         this.moduleId = moduleId;
         this.moduleLoader = moduleLoader;
         this.moduleName = moduleName;
@@ -146,5 +152,19 @@ public class SocialModule implements IModule {
         throwIfConnected();
 
         translationSources.clear();
+    }
+
+    @Override
+    public List<Entry<UUID, Version>> getDependencies() {
+        return List.copyOf(dependencies);
+    }
+
+    protected void addDependancy(UUID moduleId, Version version) {
+        dependencies.add(new AbstractMap.SimpleImmutableEntry<>(moduleId, version));
+    }
+
+    @Override
+    public Version getModuleVersion() {
+        return moduleVersion;
     }
 }

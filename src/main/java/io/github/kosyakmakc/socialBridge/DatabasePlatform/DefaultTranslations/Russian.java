@@ -22,6 +22,7 @@ public class Russian implements ITranslationSource {
                 new LocalizationRecord(MessageKey.INVALID_ARGUMENT_NOT_A_LONG.key(), "Аргумент не 64-битное целое число."),
                 new LocalizationRecord(MessageKey.INVALID_ARGUMENT_NOT_A_FLOAT.key(), "Аргумент не 32-битное дробное число."),
                 new LocalizationRecord(MessageKey.INVALID_ARGUMENT_NOT_A_DOUBLE.key(), "Аргумент не 64-битное дробное число."),
+                new LocalizationRecord(MessageKey.INVALID_ARGUMENT_MIN_MAX_ERROR.key(), "Аргумент не входит в необходимый числовой диапазон."),
                 new LocalizationRecord(MessageKey.EMPTY.key(), "")
         );
     }

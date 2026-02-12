@@ -2,6 +2,9 @@ package io.github.kosyakmakc.socialBridge.TestEnvironment;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,8 +20,9 @@ import io.github.kosyakmakc.socialBridge.Utils.Version;
 public class ModuleForTest implements IModule, AutoCloseable {
     public static final String DEFAULT_NAME = "DefaultEmptyName";
     private UUID moduleId = UUID.randomUUID();
-    private Version version = HeadlessMinecraftPlatform.VERSION;
+    private Version compabilityVersion = HeadlessMinecraftPlatform.VERSION;
 
+    private Version moduleVersion = HeadlessMinecraftPlatform.VERSION;
     private final IModuleLoader loader;
     @SuppressWarnings("rawtypes")
     private final HashMap<Class, ISocialCommand> socialCommands = new HashMap<>();
@@ -26,6 +30,7 @@ public class ModuleForTest implements IModule, AutoCloseable {
     private final HashMap<Class, IMinecraftCommand> minecraftCommands = new HashMap<>();
     @SuppressWarnings("rawtypes")
     private final HashMap<Class, ITranslationSource> translations = new HashMap<>();
+    private final LinkedList<Entry<UUID, Version>> dependencies = new LinkedList<>();
     private ISocialBridge bridge;
     private String name = DEFAULT_NAME;
 
@@ -35,11 +40,20 @@ public class ModuleForTest implements IModule, AutoCloseable {
 
     @Override
     public Version getCompabilityVersion() {
-        return version;
+        return compabilityVersion;
     }
 
     public void setCompabilityVersion(Version version) {
-        this.version = version;
+        this.compabilityVersion = version;
+    }
+
+    @Override
+    public Version getModuleVersion() {
+        return moduleVersion;
+    }
+
+    public void setModuleVersion(Version version) {
+        this.moduleVersion = version;
     }
 
     @Override
@@ -154,5 +168,10 @@ public class ModuleForTest implements IModule, AutoCloseable {
     @Override
     public void close() {
         SocialBridge.INSTANCE.disconnectModule(this);
+    }
+
+    @Override
+    public List<Entry<UUID, Version>> getDependencies() {
+        return List.copyOf(dependencies);
     }
 }
