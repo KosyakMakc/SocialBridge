@@ -366,10 +366,10 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders) {
+    public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return socialBridge
             .getLocalizationService()
-            .getMessage(locale, messageKey, null)
+            .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendBroadcaseMessage(messageTemplate, placeholders));
     }
 }
