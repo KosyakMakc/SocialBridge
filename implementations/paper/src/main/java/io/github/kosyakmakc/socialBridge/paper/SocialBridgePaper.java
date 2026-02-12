@@ -204,7 +204,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
         };
     }
 
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private RequiredArgumentBuilder<CommandSourceStack, ?> BuildArgumentNode(CommandArgument argument) {
         var commandName = argument.getName();
         var dataType = argument.getDataType();
