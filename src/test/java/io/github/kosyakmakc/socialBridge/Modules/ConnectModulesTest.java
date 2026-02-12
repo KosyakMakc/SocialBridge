@@ -59,7 +59,7 @@ public class ConnectModulesTest {
         "1.0.0", // module have new breaking-changes api, DON'T CONNECT
         "1.0.1", // module have new breaking-changes api, DON'T CONNECT
         "1.1.0", // module have new breaking-changes api, DON'T CONNECT
-        "1.1.1", // modwule have new breaking-changes api, DON'T CONNECT
+        "1.1.1", // module have new breaking-changes api, DON'T CONNECT
         "1.2.0", // module have new breaking-changes api, DON'T CONNECT
         "1.2.1", // module have new breaking-changes api, DON'T CONNECT
         "1.3.0", // module have new breaking-changes api, DON'T CONNECT
