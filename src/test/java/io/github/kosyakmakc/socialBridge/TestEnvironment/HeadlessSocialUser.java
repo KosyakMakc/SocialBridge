@@ -51,6 +51,15 @@ public class HeadlessSocialUser extends SocialUser {
     }
 
     @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction) {
+        return getPlatform()
+            .getBridge()
+            .getLocalizationService()
+            .getMessage(getLocale(), messageKey, transaction)
+            .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
+    }
+
+    @Override
     public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return getPlatform()
             .getBridge()
