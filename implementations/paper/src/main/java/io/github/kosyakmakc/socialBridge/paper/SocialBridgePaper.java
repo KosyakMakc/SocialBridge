@@ -19,6 +19,7 @@ import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
+import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -50,10 +51,12 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     public static final String PLATFORM_NAME = "paper";
     public static final UUID PLATFORM_ID = UUID.fromString("2a461647-2958-4e61-9429-12f0bb5c8d3c");
 
+    private final AsyncEvent<MinecraftUser> playerJoinEvent = new AsyncEvent<>();
+    private final AsyncEvent<MinecraftUser> playerLeaveEvent = new AsyncEvent<>();
+
     private final Version socialBridgVersion;
     private final ISocialBridge socialBridge;
     private final UUID instanceId;
-
 
     public SocialBridgePaper() {
         try {
@@ -98,7 +101,7 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
     @Override
     public void onEnable() {
-        new PaperEventListener(this);
+        new PaperEventListener(socialBridge);
     }
 
     @Override
@@ -371,5 +374,15 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
             .getLocalizationService()
             .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendBroadcaseMessage(messageTemplate, placeholders));
+    }
+
+    @Override
+    public AsyncEvent<MinecraftUser> getPlayerJoinEvent() {
+        return playerJoinEvent;
+    }
+
+    @Override
+    public AsyncEvent<MinecraftUser> getPlayerLeaveEvent() {
+        return playerLeaveEvent;
     }
 }

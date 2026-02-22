@@ -6,6 +6,7 @@ import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
+import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
@@ -23,6 +24,9 @@ import java.util.logging.Logger;
 public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     public static final String PLATFORM_NAME = "headless";
     public static final UUID PLATFORM_ID = UUID.fromString("c936579c-da7e-47dd-be85-d93f0558fab1");
+
+    private final AsyncEvent<MinecraftUser> playerJoinEvent = new AsyncEvent<>();
+    private final AsyncEvent<MinecraftUser> playerLeaveEvent = new AsyncEvent<>();
 
     public static final Version VERSION = new Version("0.10.3");
     private LinkedBlockingQueue<IMinecraftModule> registeredModules = new LinkedBlockingQueue<>();
@@ -137,5 +141,15 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     public CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'sendBroadcaseMessage'");
+    }
+
+    @Override
+    public AsyncEvent<MinecraftUser> getPlayerJoinEvent() {
+        return playerJoinEvent;
+    }
+
+    @Override
+    public AsyncEvent<MinecraftUser> getPlayerLeaveEvent() {
+        return playerLeaveEvent;
     }
 }
