@@ -82,6 +82,14 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction) {
+        return socialBridge
+            .getLocalizationService()
+            .getMessage(getLocale(), messageKey, transaction)
+            .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
+    }
+
+    @Override
     public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return socialBridge
             .getLocalizationService()

@@ -19,5 +19,6 @@ public interface ISocialMessage {
     CompletableFuture<SocialUser> getAuthor();
 
     CompletableFuture<Boolean> sendReply(String message, HashMap<String, String> placeholders);
+    CompletableFuture<Boolean> sendReply(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction);
     CompletableFuture<Boolean> sendReply(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
 }

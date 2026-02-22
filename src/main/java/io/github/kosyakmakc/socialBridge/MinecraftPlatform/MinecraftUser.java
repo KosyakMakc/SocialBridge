@@ -14,5 +14,8 @@ public abstract class MinecraftUser {
     public abstract CompletableFuture<Boolean> hasPermission(String permission);
 
     public abstract CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders);
+    public abstract CompletableFuture<Boolean> sendMessage(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction);
+
+    @Deprecated
     public abstract CompletableFuture<Boolean> sendMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
 }

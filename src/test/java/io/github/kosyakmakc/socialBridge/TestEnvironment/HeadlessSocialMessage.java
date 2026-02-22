@@ -68,6 +68,16 @@ public class HeadlessSocialMessage implements ISocialMessage {
     }
 
     @Override
+    public CompletableFuture<Boolean> sendReply(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction) {
+        return sender
+            .getPlatform()
+            .getBridge()
+            .getLocalizationService()
+            .getMessage(sender.getLocale(), messageKey, transaction)
+            .thenCompose(messageTemplate -> sendReply(messageTemplate, placeholders));
+    }
+
+    @Override
     public CompletableFuture<Boolean> sendReply(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return sender
             .getPlatform()
