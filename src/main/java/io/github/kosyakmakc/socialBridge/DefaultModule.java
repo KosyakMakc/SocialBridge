@@ -4,6 +4,7 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.En
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.Russian;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.Modules.SocialModule;
+
 import java.util.UUID;
 
 public class DefaultModule extends SocialModule {

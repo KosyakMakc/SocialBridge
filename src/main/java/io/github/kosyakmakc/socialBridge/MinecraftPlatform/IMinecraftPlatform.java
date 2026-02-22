@@ -3,6 +3,7 @@ package io.github.kosyakmakc.socialBridge.MinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
+import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 
@@ -26,6 +27,9 @@ public interface IMinecraftPlatform extends IConfigurationService, IModuleLoader
     CompletableFuture<MinecraftUser> tryGetUser(UUID minecraftId);
     CompletableFuture<MinecraftUser> tryGetUser(String playerName);
     CompletableFuture<List<MinecraftUser>> getOnlineUsers();
+
+    AsyncEvent<MinecraftUser> getPlayerJoinEvent();
+    AsyncEvent<MinecraftUser> getPlayerLeaveEvent();
 
     CompletableFuture<Boolean> sendBroadcaseMessage(String message, HashMap<String, String> placeholders);
     CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
