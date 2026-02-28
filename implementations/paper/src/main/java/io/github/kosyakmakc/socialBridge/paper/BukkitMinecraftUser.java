@@ -11,6 +11,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import org.bukkit.entity.Player;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -78,5 +80,10 @@ public class BukkitMinecraftUser extends MinecraftUser {
             .getLocalizationService()
             .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
+    }
+
+    @Override
+    public CompletableFuture<Date> getLastOnlineDate() {
+        return CompletableFuture.completedFuture(Date.from(Instant.now()));
     }
 }

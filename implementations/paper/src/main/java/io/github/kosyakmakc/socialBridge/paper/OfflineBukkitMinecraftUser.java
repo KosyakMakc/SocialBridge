@@ -1,5 +1,8 @@
 package io.github.kosyakmakc.socialBridge.paper;
 
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -12,6 +15,7 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.MinecraftPlayerData;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import net.kyori.adventure.text.Component;
@@ -47,7 +51,8 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
     }
 
     public String getLocale() {
-        return LocalizationService.defaultLocale;
+        var data = getSelfData().join(); // TODO async
+        return data != null ? data.getLocale() : LocalizationService.defaultLocale;
     }
 
     @Override
@@ -95,5 +100,45 @@ public class OfflineBukkitMinecraftUser extends MinecraftUser {
             .getLocalizationService()
             .getMessage(locale, messageKey, transaction)
             .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
+    }
+
+    @Override
+    public CompletableFuture<Date> getLastOnlineDate() {
+        return socialBridge
+            .getMinecraftPlatform()
+            .getOnlineUsers()
+            .thenCompose(players -> {
+                var onlinePlayer = players.stream().filter(player -> player.getId() == getId()).findFirst().orElse(null);
+                if (onlinePlayer != null) {
+                    return CompletableFuture.completedFuture(Date.from(Instant.now()));
+                }
+                else {
+                    return getSelfData().thenApply(data -> data != null ? data.getLastSeenAt() : null);
+                }
+            });
+    }
+
+    private CompletableFuture<MinecraftPlayerData> getSelfData() {
+        return socialBridge.doTransaction(transaction -> {
+            var databaseContext = transaction.getDatabaseContext();
+
+            var table = databaseContext.getDaoTable(MinecraftPlayerData.class);
+
+            try {
+                var cacheData = table
+                    .queryBuilder()
+                    .where()
+                    .eq(MinecraftPlayerData.SERVER_INSTANCE_ID_FIELD_NAME, socialBridge.getMinecraftPlatform().getInstanceId())
+                    .and()
+                    .eq(MinecraftPlayerData.PLAYER_ID_FIELD_NAME, getId())
+                    .queryForFirst();
+
+                return CompletableFuture.completedFuture(cacheData);
+            }
+            catch (SQLException err) {
+                err.printStackTrace();
+                return CompletableFuture.completedFuture(null);
+            }
+        });
     }
 }
