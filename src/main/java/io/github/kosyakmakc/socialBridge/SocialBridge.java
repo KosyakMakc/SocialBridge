@@ -56,6 +56,7 @@ public class SocialBridge implements ISocialBridge {
         modulesById = new HashMap<>();
 
         var defaultModule = new DefaultModule(mcPlatform);
+        var localizationHelperModule = new TranslationHelperModule(mcPlatform);
 
         var connectionString = mcPlatform.get(defaultModule, "connectionString", null, null).join();
         if (connectionString == null) {
@@ -68,6 +69,7 @@ public class SocialBridge implements ISocialBridge {
         new ApplyDatabaseMigrations().accept(this);
 
         this.connectModule(defaultModule).join();
+        this.connectModule(localizationHelperModule).join();
     }
 
     @Override
