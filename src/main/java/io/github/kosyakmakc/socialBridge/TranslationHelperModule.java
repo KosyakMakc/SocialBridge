@@ -1,5 +1,6 @@
 package io.github.kosyakmakc.socialBridge;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +52,15 @@ public class TranslationHelperModule extends SocialModule {
                         }
                     }
 
-                    return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
+                    return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
+                    .thenAccept(Void -> {
+                        context.getSender().sendMessage("ok", new HashMap<>());
+                    })
+                    .exceptionally(err -> {
+                        err.printStackTrace();
+                        context.getSender().sendMessage("error", new HashMap<>());
+                        return null;
+                    });
                 });
             }
         });
