@@ -10,13 +10,13 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentNumeric;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentSuggestions;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ICellConfiguration;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
@@ -282,11 +282,6 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     }
 
     @Override
-    public CompletableFuture<String> get(IModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
-        return get(module.getId(), parameter, defaultValue, transaction);
-    }
-
-    @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
         return getFromConfig(moduleId, parameter, defaultValue, transaction);
     }
@@ -302,11 +297,6 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
             return moduleSection.getString(parameter, defaultValue);
         });
-    }
-
-    @Override
-    public CompletableFuture<Boolean> set(IModuleBase module, String parameter, String value, ITransaction transaction) {
-        return set(module.getId(), parameter, value, transaction);
     }
 
     @Override
@@ -335,6 +325,11 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
                 return false;
             }
         });
+    }
+
+    @Override
+    public ICellConfiguration getCell(UUID moduleId, String parameterName) {
+        return new ConfigCellConfiguration(this, moduleId, parameterName);
     }
 
     @Override

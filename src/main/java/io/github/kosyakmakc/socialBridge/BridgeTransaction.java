@@ -1,5 +1,7 @@
 package io.github.kosyakmakc.socialBridge;
 
+import io.github.kosyakmakc.socialBridge.ConfigurationService.IScopedConfigurationService;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ScopedConfigurationService;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 
@@ -18,6 +20,11 @@ public class BridgeTransaction implements ITransaction, AutoCloseable {
             throw new RuntimeException("This transaction is closed");
         }
         return databaseContext;
+    }
+
+    @Override
+    public IScopedConfigurationService getConfigurationService() {
+        return new ScopedConfigurationService(this);
     }
 
     public void markSuccess() {

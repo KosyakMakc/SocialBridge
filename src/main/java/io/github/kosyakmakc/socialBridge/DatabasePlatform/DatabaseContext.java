@@ -6,6 +6,9 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.misc.TransactionManager;
 import com.j256.ormlite.support.ConnectionSource;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRow;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRowList;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRowMap;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRowSet;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.IDatabaseTable;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.Localization;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
@@ -21,8 +24,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DatabaseContext {
-    public Dao<ConfigRow, String> configurations;
-    public Dao<Localization, Integer> localizations;
+    /**
+     * use getDaoTable instead of public field
+     */
+    @Deprecated
+    public final Dao<ConfigRow, Integer> configurations;
+
+    /**
+     * use getDaoTable instead of public field
+     */
+    @Deprecated
+    public final Dao<Localization, Integer> localizations;
 
     @SuppressWarnings("rawtypes")
     private final HashMap<Class, Dao> extensionTables = new HashMap<>();
@@ -42,8 +54,12 @@ public class DatabaseContext {
         this.connectionSource = connectionSource;
         this.transactionManager = new TransactionManager(connectionSource);
 
-        configurations = DaoManager.createDao(connectionSource, ConfigRow.class);
-        localizations = DaoManager.createDao(connectionSource, Localization.class);
+        configurations = registerTable(ConfigRow.class);
+        localizations = registerTable(Localization.class);
+
+        registerTable(ConfigRowMap.class);
+        registerTable(ConfigRowList.class);
+        registerTable(ConfigRowSet.class);
     }
 
     public ConnectionSource getConnectionSource() {
@@ -68,7 +84,7 @@ public class DatabaseContext {
             return (Dao<T, Key>) dao;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed register extension table", e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

@@ -1,6 +1,6 @@
 package io.github.kosyakmakc.socialBridge;
 
-import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationService;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ConfigurationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
@@ -16,6 +16,11 @@ public interface ISocialBridge {
 
     Logger getLogger();
     ILocalizationService getLocalizationService();
+    /**
+     * Use ITransaction.getConfigurationService() instead of this method
+     * @return
+     */
+    @Deprecated
     ConfigurationService getConfigurationService();
     <T> CompletableFuture<T> doTransaction(ITransactionConsumer<T> action);
 

@@ -1,8 +1,10 @@
 package io.github.kosyakmakc.socialBridge.MinecraftPlatform;
 
-import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ITransaction;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ICellConfiguration;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
@@ -35,4 +37,18 @@ public interface IMinecraftPlatform extends IConfigurationService, IModuleLoader
     CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
 
     CompletableFuture<Void> connectModule(IMinecraftModule module);
+
+    /** Get Cell contract for specified configuration parameter of module in config file <br/>
+     * Be note that this accessor work without transaction model
+     * @param moduleId Uuid of social module
+     * @param parameter Name of Cell configuration
+     * @return
+     */
+    ICellConfiguration getCell(UUID moduleId, String parameterName);
+
+    // Usefull utils functions
+
+    default ICellConfiguration getCell(IModuleBase module, String parameter) {
+        return getCell(module.getId(), parameter);
+    };
 }

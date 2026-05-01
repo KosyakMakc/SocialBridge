@@ -1,10 +1,8 @@
-package io.github.kosyakmakc.socialBridge.DatabasePlatform;
+package io.github.kosyakmakc.socialBridge.ConfigurationService;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRow;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
 import io.github.kosyakmakc.socialBridge.ITransaction;
-import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
 import java.sql.SQLException;
@@ -24,11 +22,6 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     @Override
-    public CompletableFuture<String> get(IModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
-        return get(module.getId(), parameter, defaultValue, transaction);
-    }
-
-    @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
         return transaction == null
             ? bridge.doTransaction(transaction2 -> getFromDatabase(moduleId, parameter, defaultValue, transaction2))
@@ -36,29 +29,7 @@ public class ConfigurationService implements IConfigurationService {
     }
 
     private CompletableFuture<String> getFromDatabase(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
-        try {
-            var records = transaction.getDatabaseContext().configurations.queryBuilder()
-                        .where()
-                            .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
-                            .and()
-                            .eq(ConfigRow.PARAMETER_FIELD_NAME, parameter)
-                        .query();
-            if (records.size() > 0) {
-                var record = records.getFirst();
-                return CompletableFuture.completedFuture(record.getValue());
-            }
-        } catch (SQLException e) {
-            // skip first sql query to not existed table
-            if (!e.getMessage().equals("[SQLITE_ERROR] SQL error or missing database (no such table: config)")) {
-                e.printStackTrace();
-            }
-        }
-        return CompletableFuture.completedFuture(defaultValue);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> set(IModuleBase module, String parameter, String value, ITransaction transaction) {
-        return set(module.getId(), parameter, value, transaction);
+        return new CellConfiguration(moduleId, parameter, transaction).get().thenApply(value -> value != null ? value : defaultValue);
     }
 
     @Override
@@ -79,7 +50,7 @@ public class ConfigurationService implements IConfigurationService {
 
         try {
             var databaseContext = transaction.getDatabaseContext();
-            var records = databaseContext.configurations.queryBuilder()
+            var records = databaseContext.getDaoTable(ConfigRow.class).queryBuilder()
                         .where()
                             .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
                             .and()
@@ -88,10 +59,10 @@ public class ConfigurationService implements IConfigurationService {
             if (records.size() > 0) {
                 var record = records.getFirst();
                 record.setValue(value);
-                databaseContext.configurations.update(record);
+                databaseContext.getDaoTable(ConfigRow.class).update(record);
             } else {
                 var newRecord = new ConfigRow(moduleId, parameter, value);
-                databaseContext.configurations.create(newRecord);
+                databaseContext.getDaoTable(ConfigRow.class).create(newRecord);
             }
 
             var module = bridge.getModule(moduleId);
@@ -109,6 +80,7 @@ public class ConfigurationService implements IConfigurationService {
         return CompletableFuture.completedFuture(false);
     }
 
+    @Deprecated
     public CompletableFuture<Integer> getDatabaseVersion(ITransaction transaction) {
         return get(DefaultModule.MODULE_ID, DATABASE_VERSION, "", transaction)
                .thenApply(rawVersion -> {

@@ -50,7 +50,8 @@ public class LocalizationService implements ILocalizationService {
     private CompletableFuture<String> getMessageFromDatabase(String locale, MessageKey key, ITransaction transaction) {
             List<Localization> records;
             try {
-                records = transaction.getDatabaseContext().localizations.queryBuilder()
+                var dao = transaction.getDatabaseContext().getDaoTable(Localization.class);
+                records = dao.queryBuilder()
                         .where()
                             .eq(Localization.MODULE_FIELD_NAME, key.moduleId())
                             .and()
@@ -141,8 +142,9 @@ public class LocalizationService implements ILocalizationService {
 
         try {
             var databaseContext = transaction.getDatabaseContext();
+            var dao = databaseContext.getDaoTable(Localization.class);
 
-            var records = databaseContext.localizations.queryBuilder()
+            var records = dao.queryBuilder()
                 .where()
                     .eq(Localization.MODULE_FIELD_NAME, moduleId)
                     .and()
@@ -152,7 +154,7 @@ public class LocalizationService implements ILocalizationService {
                 .query();
 
             if (records.isEmpty()) {
-                databaseContext.localizations.create(
+                dao.create(
                     new Localization(
                         moduleId,
                         locale,
@@ -165,7 +167,7 @@ public class LocalizationService implements ILocalizationService {
             else {
                 var localizationRecord = records.getFirst();
                 localizationRecord.setLocalization(localization);
-                databaseContext.localizations.update(localizationRecord);
+                dao.update(localizationRecord);
                 appendToCache(locale, key, localization);
             }
 
@@ -221,7 +223,9 @@ public class LocalizationService implements ILocalizationService {
 
                     return bridge.doTransaction(transaction -> {
                         try {
-                            transaction.getDatabaseContext().localizations.create(
+                            var dao = transaction.getDatabaseContext().getDaoTable(Localization.class);
+
+                            dao.create(
                                 new Localization(
                                     moduleId,
                                     source.getLanguage(),

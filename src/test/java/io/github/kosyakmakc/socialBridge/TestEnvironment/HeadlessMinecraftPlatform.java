@@ -5,11 +5,11 @@ import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridge.SocialBridge;
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ICellConfiguration;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
@@ -69,11 +71,6 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     @Override
-    public CompletableFuture<String> get(IModuleBase module, String parameter, String defaultValue, ITransaction transaction) {
-        return get(module.getId(), parameter, defaultValue, transaction);
-    }
-
-    @Override
     public CompletableFuture<String> get(UUID moduleId, String parameter, String defaultValue, ITransaction transaction) {
         var moduleConfig = config.getOrDefault(moduleId, null);
         if (moduleConfig == null) {
@@ -83,11 +80,6 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
 
         var result = moduleConfig.getOrDefault(parameter, defaultValue);
         return CompletableFuture.completedFuture(result);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> set(IModuleBase module, String parameter, String value, ITransaction transaction) {
-        return set(module.getId(), parameter, value, transaction);
     }
 
     @Override
@@ -103,7 +95,9 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     }
 
     private static boolean isInited = false;
+    private static final Lock R_LOCK = new ReentrantLock();
     public static void Init() throws SQLException, IOException {
+        R_LOCK.lock();
         if (isInited) {
             return;
         }
@@ -113,6 +107,7 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
 
         SocialBridge.Init(mcPlatform);
         isInited = true;
+        R_LOCK.unlock();
     }
 
     @Override
@@ -151,5 +146,16 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     @Override
     public AsyncEvent<MinecraftUser> getPlayerLeaveEvent() {
         return playerLeaveEvent;
+    }
+
+    @Override
+    public ICellConfiguration getCell(UUID moduleId, String parameterName) {
+        var moduleConfig = config.getOrDefault(moduleId, null);
+        if (moduleConfig == null) {
+            moduleConfig = new HashMap<>();
+            config.put(moduleId, moduleConfig);
+        }
+
+        return new HeadlessCellConfiguration(config.get(moduleId), parameterName);
     }
 }

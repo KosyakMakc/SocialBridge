@@ -16,8 +16,8 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.logger.LogBackendType;
 import com.j256.ormlite.logger.LoggerFactory;
 
+import io.github.kosyakmakc.socialBridge.ConfigurationService.ConfigurationService;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.ApplyDatabaseMigrations;
-import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationService;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
@@ -57,7 +57,7 @@ public class SocialBridge implements ISocialBridge {
 
         var defaultModule = new DefaultModule(mcPlatform);
 
-        var connectionString = mcPlatform.get(defaultModule, "connectionString", null, null).join();
+        var connectionString = mcPlatform.getCell(defaultModule, "connectionString").get().join();
         if (connectionString == null) {
             throw new RuntimeException("failed connect to database, check connectionString in config");
         }
@@ -89,7 +89,8 @@ public class SocialBridge implements ISocialBridge {
     public <T> CompletableFuture<T> doTransaction(ITransactionConsumer<T> action) {
         return databaseContext.withTransaction(() -> {
             try (var transaction = new BridgeTransaction(databaseContext))  {
-                var result = action.accept(transaction).join();
+                var task = action.accept(transaction);
+                var result = task.join();
                 transaction.markSuccess();
                 return result;
             }
