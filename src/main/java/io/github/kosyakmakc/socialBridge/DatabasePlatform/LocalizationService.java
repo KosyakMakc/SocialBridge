@@ -33,6 +33,10 @@ public class LocalizationService implements ILocalizationService {
 
     @Override
     public CompletableFuture<String> getMessage(String locale, MessageKey key, ITransaction transaction) {
+        if (locale == null || locale.isEmpty()) {
+            locale = defaultLocale;
+        }
+
         var localization = searchByCache(locale, key);
         if (localization != null) {
             return CompletableFuture.completedFuture(localization);
@@ -73,7 +77,11 @@ public class LocalizationService implements ILocalizationService {
             return task.thenCompose(x -> {
                 if (x == null) {
                     if (!locale.equalsIgnoreCase(defaultLocale)) {
-                        return getMessage(defaultLocale, key, transaction);
+                        return getMessage(defaultLocale, key, transaction)
+                        .thenApply(defaultLocalization -> {
+                            appendToCache(locale, key, defaultLocalization);
+                            return defaultLocalization;
+                        });
                     }
                 }
                 return CompletableFuture.completedStage(x);
