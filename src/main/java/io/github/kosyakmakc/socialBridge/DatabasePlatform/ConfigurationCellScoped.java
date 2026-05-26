@@ -25,8 +25,9 @@ public class ConfigurationCellScoped implements IConfigurationCellScoped {
     
     // Cache state - all fields are filled atomically on first access
     private String cachedValue = null;
-    private boolean cacheLoaded = false;
+    private volatile boolean cacheLoaded = false;
     private boolean existsInStorage = false;
+    private volatile CompletableFuture<Void> loadingFuture = null;
     
     public ConfigurationCellScoped(UUID moduleId, String parameterName, ITransaction transaction) {
         this.moduleId = moduleId;
@@ -47,36 +48,61 @@ public class ConfigurationCellScoped implements IConfigurationCellScoped {
     /**
      * Ensures cache is loaded from storage. This method is called by all public methods
      * to guarantee single database access regardless of which method is called first.
+     * Uses a shared CompletableFuture so all callers wait for the same loading operation.
      */
     private CompletableFuture<Void> ensureCacheLoaded() {
         throwIfClosed();
         
+        // Fast path: if loading is already complete, return immediately
         if (cacheLoaded) {
             return CompletableFuture.completedFuture(null);
         }
         
-        try {
-            var records = transaction.getDatabaseContext().configurations.queryBuilder()
-                        .where()
-                            .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
-                            .and()
-                            .eq(ConfigRow.PARAMETER_FIELD_NAME, parameterName)
-                        .query();
-            if (records.size() > 0) {
-                existsInStorage = true;
-                cachedValue = records.getFirst().getValue();
-            } else {
-                existsInStorage = false;
-                cachedValue = null;
+        // Fast path: if another thread is already loading, wait on the same future
+        CompletableFuture<Void> existingFuture = loadingFuture;
+        if (existingFuture != null) {
+            return existingFuture;
+        }
+        
+        synchronized (this) {
+            if (cacheLoaded) {
+                return CompletableFuture.completedFuture(null);
             }
-            cacheLoaded = true;
-            return CompletableFuture.completedFuture(null);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            existsInStorage = false;
-            cachedValue = null;
-            cacheLoaded = true;
-            return CompletableFuture.completedFuture(null);
+            
+            existingFuture = loadingFuture;
+            if (existingFuture != null) {
+                return existingFuture;
+            }
+            
+            // Create the loading future - all concurrent callers will wait on this same future
+            CompletableFuture<Void> newFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    var records = transaction.getDatabaseContext().configurations.queryBuilder()
+                                .where()
+                                    .eq(ConfigRow.MODULE_FIELD_NAME, moduleId)
+                                    .and()
+                                    .eq(ConfigRow.PARAMETER_FIELD_NAME, parameterName)
+                                .query();
+                    if (records.size() > 0) {
+                        existsInStorage = true;
+                        cachedValue = records.getFirst().getValue();
+                    } else {
+                        existsInStorage = false;
+                        cachedValue = null;
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    existsInStorage = false;
+                    cachedValue = null;
+                } finally {
+                    cacheLoaded = true;
+                    loadingFuture = null;
+                }
+                return null;
+            });
+            
+            loadingFuture = newFuture;
+            return newFuture;
         }
     }
     

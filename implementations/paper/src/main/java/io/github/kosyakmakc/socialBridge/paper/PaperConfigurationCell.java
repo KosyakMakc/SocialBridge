@@ -24,8 +24,9 @@ public class PaperConfigurationCell implements IConfigurationCell {
     
     // Cache state - all fields are filled atomically on first access
     private String cachedValue = null;
-    private boolean cacheLoaded = false;
+    private volatile boolean cacheLoaded = false;
     private boolean existsInStorage = false;
+    private volatile CompletableFuture<Void> loadingFuture = null;
     
     public PaperConfigurationCell(UUID moduleId, String parameterName, JavaPlugin plugin) {
         this.moduleId = moduleId;
@@ -36,26 +37,53 @@ public class PaperConfigurationCell implements IConfigurationCell {
     /**
      * Ensures cache is loaded from storage. This method is called by all public methods
      * to guarantee single config access regardless of which method is called first.
+     * Uses a shared CompletableFuture so all callers wait for the same loading operation.
      */
     private CompletableFuture<Void> ensureCacheLoaded() {
+        // Fast path: if loading is already complete, return immediately
         if (cacheLoaded) {
             return CompletableFuture.completedFuture(null);
         }
         
-        return CompletableFuture.supplyAsync(() -> {
-            var config = plugin.getConfig();
-            var moduleSection = config.getConfigurationSection("module-" + moduleId.toString());
-            if (moduleSection == null) {
-                existsInStorage = false;
-                cachedValue = null;
-            } else {
-                // Check if the key exists in the section (even if value is null)
-                existsInStorage = moduleSection.contains(parameterName);
-                cachedValue = moduleSection.getString(parameterName);
+        // Fast path: if another thread is already loading, wait on the same future
+        CompletableFuture<Void> existingFuture = loadingFuture;
+        if (existingFuture != null) {
+            return existingFuture;
+        }
+        
+        synchronized (this) {
+            if (cacheLoaded) {
+                return CompletableFuture.completedFuture(null);
             }
-            cacheLoaded = true;
-            return null;
-        });
+            
+            existingFuture = loadingFuture;
+            if (existingFuture != null) {
+                return existingFuture;
+            }
+            
+            // Create the loading future - all concurrent callers will wait on this same future
+            CompletableFuture<Void> newFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    var config = plugin.getConfig();
+                    var moduleSection = config.getConfigurationSection("module-" + moduleId.toString());
+                    if (moduleSection == null) {
+                        existsInStorage = false;
+                        cachedValue = null;
+                    } else {
+                        // Check if the key exists in the section (even if value is null)
+                        existsInStorage = moduleSection.contains(parameterName);
+                        cachedValue = moduleSection.getString(parameterName);
+                    }
+                } finally {
+                    cacheLoaded = true;
+                    loadingFuture = null;
+                }
+                return null;
+            });
+            
+            loadingFuture = newFuture;
+            return newFuture;
+        }
     }
     
     @Override
