@@ -33,10 +33,21 @@ public class HeadlessConfigurationCell implements IConfigurationCell {
     }
     
     /**
+     * Checks if the transaction is closed and throws IllegalStateException if so.
+     */
+    private void throwIfClosed() {
+        if (platform.isClosed()) {
+            throw new IllegalStateException("Cannot access configuration cell after transaction is closed");
+        }
+    }
+    
+    /**
      * Ensures cache is loaded from storage. This method is called by all public methods
      * to guarantee single storage access regardless of which method is called first.
      */
     private CompletableFuture<Void> ensureCacheLoaded() {
+        throwIfClosed();
+        
         if (cacheLoaded) {
             return CompletableFuture.completedFuture(null);
         }
@@ -57,11 +68,13 @@ public class HeadlessConfigurationCell implements IConfigurationCell {
     
     @Override
     public CompletableFuture<String> read() {
+        throwIfClosed();
         return ensureCacheLoaded().thenApply(v -> cachedValue);
     }
     
     @Override
     public CompletableFuture<Boolean> write(String value) {
+        throwIfClosed();
         return CompletableFuture.supplyAsync(() -> {
             platform.setConfigValue(moduleId, parameterName, value);
             cachedValue = value;
@@ -73,11 +86,13 @@ public class HeadlessConfigurationCell implements IConfigurationCell {
     
     @Override
     public CompletableFuture<Boolean> isEmpty() {
+        throwIfClosed();
         return ensureCacheLoaded().thenApply(v -> !existsInStorage);
     }
     
     @Override
     public CompletableFuture<Boolean> clear() {
+        throwIfClosed();
         return CompletableFuture.supplyAsync(() -> {
             platform.removeConfigKey(moduleId, parameterName);
             cachedValue = null;

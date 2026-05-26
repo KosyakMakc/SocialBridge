@@ -16,6 +16,15 @@ public interface ITransaction {
     AsyncEvent<Boolean> getCloseEvent();
     
     /**
+     * Check if the transaction is closed.
+     * After closure, no operations can be performed on this transaction
+     * or any configuration cells created from it.
+     * 
+     * @return true if the transaction is closed
+     */
+    boolean isClosed();
+    
+    /**
      * Get a scoped configuration cell for the given module and parameter.
      * The cell is scoped to this transaction - cached values are guaranteed
      * not dirty within the transaction lifetime.
@@ -23,6 +32,7 @@ public interface ITransaction {
      * @param moduleId the module UUID
      * @param parameterName the parameter name
      * @return IConfigurationCellScoped instance
+     * @throws IllegalStateException if the transaction is closed
      */
     IConfigurationCellScoped getConfigurationCell(UUID moduleId, String parameterName);
 }

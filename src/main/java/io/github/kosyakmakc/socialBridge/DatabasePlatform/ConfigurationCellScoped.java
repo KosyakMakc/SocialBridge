@@ -35,10 +35,22 @@ public class ConfigurationCellScoped implements IConfigurationCellScoped {
     }
     
     /**
+     * Checks if the transaction is closed and throws IllegalStateException if so.
+     * This prevents using configuration cells after the transaction has been closed.
+     */
+    private void throwIfClosed() {
+        if (transaction.isClosed()) {
+            throw new IllegalStateException("Cannot access configuration cell after transaction is closed");
+        }
+    }
+    
+    /**
      * Ensures cache is loaded from storage. This method is called by all public methods
      * to guarantee single database access regardless of which method is called first.
      */
     private CompletableFuture<Void> ensureCacheLoaded() {
+        throwIfClosed();
+        
         if (cacheLoaded) {
             return CompletableFuture.completedFuture(null);
         }
@@ -70,11 +82,13 @@ public class ConfigurationCellScoped implements IConfigurationCellScoped {
     
     @Override
     public CompletableFuture<String> read() {
+        throwIfClosed();
         return ensureCacheLoaded().thenApply(v -> cachedValue);
     }
     
     @Override
     public CompletableFuture<Boolean> write(String value) {
+        throwIfClosed();
         return writeToDatabase(value).thenApply(success -> {
             if (success) {
                 cachedValue = value;
@@ -87,11 +101,13 @@ public class ConfigurationCellScoped implements IConfigurationCellScoped {
     
     @Override
     public CompletableFuture<Boolean> isEmpty() {
+        throwIfClosed();
         return ensureCacheLoaded().thenApply(v -> !existsInStorage);
     }
     
     @Override
     public CompletableFuture<Boolean> clear() {
+        throwIfClosed();
         return deleteFromDatabase().thenApply(success -> {
             if (success) {
                 cachedValue = null;

@@ -10,6 +10,7 @@ public class BridgeTransaction implements ITransaction, AutoCloseable {
     private final AsyncEvent<Boolean> closeEvent = new AsyncEvent<>();
     private DatabaseContext databaseContext;
     private boolean isSuccess = false;
+    private boolean closed = false;
 
     public BridgeTransaction(DatabaseContext databaseContext) {
         this.databaseContext = databaseContext;
@@ -31,11 +32,17 @@ public class BridgeTransaction implements ITransaction, AutoCloseable {
     public void close() throws Exception {
         closeEvent.invoke(isSuccess).join();
         databaseContext = null;
+        closed = true;
     }
 
     @Override
     public AsyncEvent<Boolean> getCloseEvent() {
         return closeEvent;
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed;
     }
 
     @Override
