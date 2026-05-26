@@ -4,6 +4,7 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationCellScope
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class BridgeTransaction implements ITransaction, AutoCloseable {
@@ -47,6 +48,11 @@ public class BridgeTransaction implements ITransaction, AutoCloseable {
 
     @Override
     public IConfigurationCellScoped getConfigurationCell(UUID moduleId, String parameterName) {
+        Objects.requireNonNull(moduleId, "moduleId must not be null");
+        Objects.requireNonNull(parameterName, "parameterName must not be null");
+        if (parameterName.isBlank()) {
+            throw new IllegalArgumentException("parameterName must not be blank");
+        }
         return new ConfigurationCellScoped(moduleId, parameterName, this);
     }
 }

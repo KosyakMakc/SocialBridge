@@ -11,6 +11,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConfigurationsTests {
     @ParameterizedTest
@@ -134,5 +137,85 @@ public class ConfigurationsTests {
         }).join();
         
         Assertions.assertTrue(isEmpty);
+    }
+
+    @Test
+    void CheckNullModuleId() throws SQLException, IOException {
+        HeadlessMinecraftPlatform.Init();
+
+        var exception = assertThrows(CompletionException.class, () -> {
+            SocialBridge.INSTANCE.doTransaction(transaction -> {
+                var cell = transaction.getConfigurationCell(null, "test");
+                return cell.read();
+            }).join();
+        });
+
+        // Unwrap CompletionException -> SQLException -> NullPointerException
+        Throwable cause = exception.getCause();
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        Assertions.assertInstanceOf(NullPointerException.class, cause);
+        Assertions.assertEquals("moduleId must not be null", cause.getMessage());
+    }
+
+    @Test
+    void CheckNullParameterName() throws SQLException, IOException {
+        HeadlessMinecraftPlatform.Init();
+
+        var exception = assertThrows(CompletionException.class, () -> {
+            SocialBridge.INSTANCE.doTransaction(transaction -> {
+                var cell = transaction.getConfigurationCell(DefaultModule.MODULE_ID, null);
+                return cell.read();
+            }).join();
+        });
+
+        // Unwrap CompletionException -> SQLException -> NullPointerException
+        Throwable cause = exception.getCause();
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        Assertions.assertInstanceOf(NullPointerException.class, cause);
+        Assertions.assertEquals("parameterName must not be null", cause.getMessage());
+    }
+
+    @Test
+    void CheckEmptyParameterName() throws SQLException, IOException {
+        HeadlessMinecraftPlatform.Init();
+
+        var exception = assertThrows(CompletionException.class, () -> {
+            SocialBridge.INSTANCE.doTransaction(transaction -> {
+                var cell = transaction.getConfigurationCell(DefaultModule.MODULE_ID, "");
+                return cell.read();
+            }).join();
+        });
+
+        // Unwrap CompletionException -> SQLException -> IllegalArgumentException
+        Throwable cause = exception.getCause();
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        Assertions.assertInstanceOf(IllegalArgumentException.class, cause);
+        Assertions.assertEquals("parameterName must not be blank", cause.getMessage());
+    }
+
+    @Test
+    void CheckBlankParameterName() throws SQLException, IOException {
+        HeadlessMinecraftPlatform.Init();
+
+        var exception = assertThrows(CompletionException.class, () -> {
+            SocialBridge.INSTANCE.doTransaction(transaction -> {
+                var cell = transaction.getConfigurationCell(DefaultModule.MODULE_ID, "   ");
+                return cell.read();
+            }).join();
+        });
+
+        // Unwrap CompletionException -> SQLException -> IllegalArgumentException
+        Throwable cause = exception.getCause();
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        Assertions.assertInstanceOf(IllegalArgumentException.class, cause);
+        Assertions.assertEquals("parameterName must not be blank", cause.getMessage());
     }
 }

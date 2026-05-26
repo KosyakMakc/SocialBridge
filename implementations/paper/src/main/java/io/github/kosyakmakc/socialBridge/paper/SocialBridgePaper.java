@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -383,6 +384,11 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
 
     @Override
     public IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName) {
+        Objects.requireNonNull(moduleId, "moduleId must not be null");
+        Objects.requireNonNull(parameterName, "parameterName must not be null");
+        if (parameterName.isBlank()) {
+            throw new IllegalArgumentException("parameterName must not be blank");
+        }
         return new PaperConfigurationCell(moduleId, parameterName, this);
     }
 }

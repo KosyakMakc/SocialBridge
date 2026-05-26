@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -161,6 +162,11 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     
     @Override
     public IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName) {
+        Objects.requireNonNull(moduleId, "moduleId must not be null");
+        Objects.requireNonNull(parameterName, "parameterName must not be null");
+        if (parameterName.isBlank()) {
+            throw new IllegalArgumentException("parameterName must not be blank");
+        }
         return new HeadlessConfigurationCell(moduleId, parameterName, this);
     }
     
