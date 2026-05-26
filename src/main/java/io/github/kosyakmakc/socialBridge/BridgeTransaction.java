@@ -1,7 +1,10 @@
 package io.github.kosyakmakc.socialBridge;
 
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.ConfigurationCellScoped;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DatabaseContext;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
+
+import java.util.UUID;
 
 public class BridgeTransaction implements ITransaction, AutoCloseable {
     private final AsyncEvent<Boolean> closeEvent = new AsyncEvent<>();
@@ -33,5 +36,10 @@ public class BridgeTransaction implements ITransaction, AutoCloseable {
     @Override
     public AsyncEvent<Boolean> getCloseEvent() {
         return closeEvent;
+    }
+
+    @Override
+    public IConfigurationCellScoped getConfigurationCell(UUID moduleId, String parameterName) {
+        return new ConfigurationCellScoped(moduleId, parameterName, this);
     }
 }

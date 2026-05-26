@@ -16,7 +16,14 @@ public interface ISocialBridge {
 
     Logger getLogger();
     ILocalizationService getLocalizationService();
+    
+    /**
+     * @deprecated Use ITransaction.getConfigurationCell() or IMinecraftPlatform.getConfigurationCell() instead.
+     * This method is kept for backward compatibility.
+     */
+    @Deprecated
     ConfigurationService getConfigurationService();
+    
     <T> CompletableFuture<T> doTransaction(ITransactionConsumer<T> action);
 
     BridgeEvents getEvents();
