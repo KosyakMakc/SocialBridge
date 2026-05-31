@@ -34,7 +34,6 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     private LinkedBlockingQueue<IMinecraftModule> registeredModules = new LinkedBlockingQueue<>();
     private HashMap<UUID, HashMap<String, String>> config = new HashMap<>();
     private final UUID instanceId = UUID.randomUUID();
-    private boolean closed = false;
 
     @Override
     public String getPlatformName() {
@@ -156,10 +155,6 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
         return playerLeaveEvent;
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
-    
     @Override
     public IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName) {
         Objects.requireNonNull(moduleId, "moduleId must not be null");
