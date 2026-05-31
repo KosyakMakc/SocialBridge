@@ -3,22 +3,18 @@ package io.github.kosyakmakc.socialBridge.paper;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-
-import io.github.kosyakmakc.socialBridge.Commands.ICommandWithArguments;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatException;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentNumeric;
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.ICommandArgumentSuggestions;
+import io.github.kosyakmakc.socialBridge.Commands.ICommandWithArguments;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.IMinecraftCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
-import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.ITransaction;
-import io.github.kosyakmakc.socialBridge.ISocialBridge;
+import io.github.kosyakmakc.socialBridge.*;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
-import io.github.kosyakmakc.socialBridge.SocialBridge;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
@@ -30,7 +26,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
-
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -384,5 +380,15 @@ public final class SocialBridgePaper extends JavaPlugin implements IMinecraftPla
     @Override
     public AsyncEvent<MinecraftUser> getPlayerLeaveEvent() {
         return playerLeaveEvent;
+    }
+
+    @Override
+    public IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName) {
+        Objects.requireNonNull(moduleId, "moduleId must not be null");
+        Objects.requireNonNull(parameterName, "parameterName must not be null");
+        if (parameterName.isBlank()) {
+            throw new IllegalArgumentException("parameterName must not be blank");
+        }
+        return new PaperConfigurationCell(moduleId, parameterName, this);
     }
 }

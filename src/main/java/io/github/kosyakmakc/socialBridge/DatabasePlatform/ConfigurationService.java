@@ -1,17 +1,22 @@
 package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Tables.ConfigRow;
-import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 import io.github.kosyakmakc.socialBridge.DefaultModule;
-import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
+import io.github.kosyakmakc.socialBridge.ITransaction;
+import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
 
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
+/**
+ * @deprecated Use ITransaction.getConfigurationCell() instead.
+ * This class is kept for backward compatibility.
+ */
+@Deprecated
 public class ConfigurationService implements IConfigurationService {
     public static final String DATABASE_VERSION = "DATABASE_VERSION";
 

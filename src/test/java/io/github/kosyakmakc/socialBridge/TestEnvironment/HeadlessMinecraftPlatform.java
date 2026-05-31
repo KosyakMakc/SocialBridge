@@ -1,21 +1,23 @@
 package io.github.kosyakmakc.socialBridge.TestEnvironment;
 
 import io.github.kosyakmakc.socialBridge.DefaultModule;
+import io.github.kosyakmakc.socialBridge.IConfigurationCell;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IMinecraftPlatform;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
 import io.github.kosyakmakc.socialBridge.Modules.IModuleBase;
+import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.Utils.AsyncEvent;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
-import io.github.kosyakmakc.socialBridge.SocialBridge;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -151,5 +153,49 @@ public class HeadlessMinecraftPlatform implements IMinecraftPlatform {
     @Override
     public AsyncEvent<MinecraftUser> getPlayerLeaveEvent() {
         return playerLeaveEvent;
+    }
+
+    @Override
+    public IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName) {
+        Objects.requireNonNull(moduleId, "moduleId must not be null");
+        Objects.requireNonNull(parameterName, "parameterName must not be null");
+        if (parameterName.isBlank()) {
+            throw new IllegalArgumentException("parameterName must not be blank");
+        }
+        return new HeadlessConfigurationCell(moduleId, parameterName, this);
+    }
+    
+    // Helper methods for HeadlessConfigurationCell
+    
+    String getConfigValue(UUID moduleId, String parameterName) {
+        var moduleConfig = config.getOrDefault(moduleId, null);
+        if (moduleConfig == null) {
+            return null;
+        }
+        return moduleConfig.get(parameterName);
+    }
+    
+    boolean hasConfigKey(UUID moduleId, String parameterName) {
+        var moduleConfig = config.getOrDefault(moduleId, null);
+        if (moduleConfig == null) {
+            return false;
+        }
+        return moduleConfig.containsKey(parameterName);
+    }
+    
+    void setConfigValue(UUID moduleId, String parameterName, String value) {
+        var moduleConfig = config.getOrDefault(moduleId, null);
+        if (moduleConfig == null) {
+            moduleConfig = new HashMap<>();
+            config.put(moduleId, moduleConfig);
+        }
+        moduleConfig.put(parameterName, value);
+    }
+    
+    void removeConfigKey(UUID moduleId, String parameterName) {
+        var moduleConfig = config.getOrDefault(moduleId, null);
+        if (moduleConfig != null) {
+            moduleConfig.remove(parameterName);
+        }
     }
 }

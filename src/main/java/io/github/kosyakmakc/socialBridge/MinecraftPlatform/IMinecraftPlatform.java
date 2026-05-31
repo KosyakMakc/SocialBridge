@@ -1,5 +1,6 @@
 package io.github.kosyakmakc.socialBridge.MinecraftPlatform;
 
+import io.github.kosyakmakc.socialBridge.IConfigurationCell;
 import io.github.kosyakmakc.socialBridge.IConfigurationService;
 import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.Modules.IMinecraftModule;
@@ -14,6 +15,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
+/**
+ * Minecraft platform abstraction.
+ * 
+ * NOTE: Still extends IConfigurationService for backward compatibility.
+ * New code should use getConfigurationCell() instead.
+ */
 public interface IMinecraftPlatform extends IConfigurationService, IModuleLoader {
     String getPlatformName();
     UUID getId();
@@ -35,4 +42,14 @@ public interface IMinecraftPlatform extends IConfigurationService, IModuleLoader
     CompletableFuture<Boolean> sendBroadcaseMessage(MessageKey messageKey, String locale, HashMap<String, String> placeholders, ITransaction transaction);
 
     CompletableFuture<Void> connectModule(IMinecraftModule module);
+    
+    /**
+     * Get a configuration cell for the given module and parameter.
+     * The cell is backed by platform storage (e.g., YAML) and cached.
+     * 
+     * @param moduleId the module UUID
+     * @param parameterName the parameter name
+     * @return IConfigurationCell instance
+     */
+    IConfigurationCell getConfigurationCell(UUID moduleId, String parameterName);
 }

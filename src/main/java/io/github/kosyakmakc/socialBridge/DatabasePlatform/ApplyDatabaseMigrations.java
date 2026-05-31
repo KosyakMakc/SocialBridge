@@ -2,6 +2,7 @@ package io.github.kosyakmakc.socialBridge.DatabasePlatform;
 
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Migrations.IMigration;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.Migrations.v1_InitialSetup;
+import io.github.kosyakmakc.socialBridge.DefaultModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 
 import java.util.Arrays;
@@ -15,13 +16,23 @@ public class ApplyDatabaseMigrations implements Consumer<ISocialBridge> {
     public final IMigration[] migrations = new IMigration[] {
             new v1_InitialSetup()
     };
+    
+    public static final String DATABASE_VERSION = "DATABASE_VERSION";
 
     @Override
     public void accept(ISocialBridge bridge) {
         var logger = bridge.getLogger();
-        var configurationService = bridge.getConfigurationService();
 
-        var databaseVersion = configurationService.getDatabaseVersion(null).join();
+        var databaseVersion = bridge.doTransaction(transaction -> {
+            var cell = transaction.getConfigurationCell(DefaultModule.MODULE_ID, DATABASE_VERSION);
+            return cell.read().thenApply(rawVersion -> {
+                try {
+                    return Integer.parseInt(rawVersion);
+                } catch (NumberFormatException e) {
+                    return -1;
+                }
+            });
+        }).join();
         var latestDatabaseVersion = Arrays.stream(migrations).max(Comparator.comparingInt(IMigration::getVersion)).get().getVersion();
 
         if (databaseVersion < latestDatabaseVersion) {
